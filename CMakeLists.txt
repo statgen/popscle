@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.4)
-project(freemuxlet)
+project(popscle)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -pthread")
@@ -21,7 +21,7 @@ ExternalProject_Add(HTSLIB
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/htslib/include/)
 
-add_executable(freemuxlet
+add_executable(popscle
         allele.cpp
         allele.h
         bam_endian.h
@@ -111,7 +111,7 @@ add_executable(freemuxlet
         vntr.h
         vptree.h
         )
-add_dependencies(freemuxlet HTSLIB)
+add_dependencies(popscle HTSLIB)
 
 find_library(ZLIB z HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
 if(NOT ZLIB)
@@ -133,4 +133,4 @@ if(NOT CRYPTOLIB)
     message(FATAL_ERROR "libcrypto library not found")
 endif()
 
-target_link_libraries(freemuxlet ${CMAKE_CURRENT_SOURCE_DIR}/htslib/libhts.a ${ZLIB} ${BZ2LIB} ${CURLLIB} ${CRYPTOLIB})
+target_link_libraries(popscle ${CMAKE_CURRENT_SOURCE_DIR}/htslib/libhts.a ${ZLIB} ${BZ2LIB} ${CURLLIB} ${CRYPTOLIB})
