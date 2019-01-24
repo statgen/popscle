@@ -36,31 +36,43 @@ Alternatively, `dsc-pileup` could also directly take SAM file without running `d
 
 ### Installing demuxlet/freemuxlet
 
-<pre>
+
 $ mkdir build
 $ cd build
 $ cmake ..
-$ make
+<pre>
+In case any required libraries is missing, you may specify customized installing path by replacing "cmake .." with:
+
+For libhts:
+  - $ cmake -DHTS_INCLUDE_DIRS=/hts_absolute_path/include/  -DHTS_LIBRARIES=/hts_absolute_path/lib/libhts.a ..
+
+For bzip2:
+  - $ cmake -DBZIP2_INCLUDE_DIRS=/bzip2_absolute_path/include/ -DBZIP2_LIBRARIES=/bzip2_absolute_path/lib/libbz2.a ..
+
+For lzma:
+  - $ cmake -DLZMA_INCLUDE_DIRS=/lzma_absolute_path/include/ -DLZMA_LIBRARIES=/lzma_absolute_path/lib/liblzma.a ..
 </pre>
+$ make
+
 
 ### Using demuxlet and freemuxlet
 All softwares use a self-documentation utility. You can run each utility with -man or -help option to see the command line usages. Also, we offer some general practice with an example in tutorial (data is available here: https://ucsf.box.com/s/vg1bycvsjgyg63gkqsputprq5rxzjl6k).
 
 #### demuxlet
 <pre>
-$ ./dsc-pileup --sam /data/$bam --vcf /data/$ref_vcf --out /data/$pileup
-$ ./demuxlet --plp /data/$pileup --vcf /data/$external_vcf --field $(GT or GP or PL) --out /data/$filename
+$(POPSCLE_HOME)/bin/popscle dsc-pileup --sam /data/$bam --vcf /data/$ref_vcf --out /data/$pileup
+$(POPSCLE_HOME)/bin/popscle demuxlet --plp /data/$pileup --vcf /data/$external_vcf --field $(GT or GP or PL) --out /data/$filename
 </pre>
 
 Or, demuxlet could directly take SAM file as input:
 <pre>
-$ ./demuxlet --sam /data/$sam --vcf /data/$external_vcf --field $(GT or GP or PL) --out /data/$filename
+$(POPSCLE_HOME)/bin/popscle demuxlet --sam /data/$sam --vcf /data/$external_vcf --field $(GT or GP or PL) --out /data/$filename
 </pre>
 
 #### freemuxlet
 <pre>
-$ ./dsc-pileup --sam /data/$bam --vcf /data/$ref_vcf --out /data/$pileup
-$ ./freemuxlet --plp /data/$pileup --out /data/$filename --nsample $n
+$(POPSCLE_HOME)/bin/popscle dsc-pileup --sam /data/$bam --vcf /data/$ref_vcf --out /data/$pileup
+$(POPSCLE_HOME)/bin/popscle freemuxlet --plp /data/$pileup --out /data/$filename --nsample $n
 </pre>
 
 The detailed usage is also pasted below.
