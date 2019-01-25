@@ -38,8 +38,11 @@ Alternatively, `dsc-pileup` could also directly take SAM file without running `d
 
 
 $ mkdir build
+
 $ cd build
+
 $ cmake ..
+
 <pre>
 In case any required libraries is missing, you may specify customized installing path by replacing "cmake .." with:
 
@@ -52,6 +55,7 @@ For bzip2:
 For lzma:
   - $ cmake -DLZMA_INCLUDE_DIRS=/lzma_absolute_path/include/ -DLZMA_LIBRARIES=/lzma_absolute_path/lib/liblzma.a ..
 </pre>
+
 $ make
 
 
