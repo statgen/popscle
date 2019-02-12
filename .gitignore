@@ -36,3 +36,4 @@ cmake-build-debug/
 build
 htslib
 bin
+.DS_Store

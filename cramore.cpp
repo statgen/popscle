@@ -50,18 +50,18 @@ int32_t main(int32_t argc, char** argv) {
     LONG_COMMAND_GROUP("Single cell analysis", NULL)
     LONG_COMMAND("demuxlet", &cmdCramDemuxlet, "Deconvolute sample identify of droplet-based sc-RNAseq")
     LONG_COMMAND("freemuxlet", &cmdCramFreemuxlet, "Genotype-free deconvolution of sc-RNAseq")
-    LONG_COMMAND("mux-pileup", &cmdCramMuxPileup, "Produce pileup of dsc-RNAseq")
+    //LONG_COMMAND("mux-pileup", &cmdCramMuxPileup, "Produce pileup of dsc-RNAseq")
     LONG_COMMAND("dsc-pileup", &cmdCramDigitalPileup, "Produce pileup of dsc-RNAseq")    
-    LONG_COMMAND("simuxlet",   &cmdCramSimuxlet,  "Simulate multiplexed dsc-RNAseq droplets")
-    LONG_COMMAND("kallisto-count", &cmdScKallistoCount, "Produce digital expression matrix from kallisto-aligned sequence reads")
-    LONG_COMMAND("sc-map-stamps", &cmdScMapSTAMPs, "Produce STAMP-map from DropSeq FASTQ files")
-    LONG_COMMAND("sc-multinom-em", &cmdScMultinomEM, "Multinomial EM clustering of single cell types")
-    LONG_COMMAND("sc-multinom-gibbs", &cmdScMultinomGibbs, "Multinomial Gibbs sampling of single cell types")
-    LONG_COMMAND("plp-find-mux-clust", &cmdPlpFindMuxClust, "(Experimental) Perform tSNE clustering on mux-seq data")    
+    //LONG_COMMAND("simuxlet",   &cmdCramSimuxlet,  "Simulate multiplexed dsc-RNAseq droplets")
+    //LONG_COMMAND("kallisto-count", &cmdScKallistoCount, "Produce digital expression matrix from kallisto-aligned sequence reads")
+    //LONG_COMMAND("sc-map-stamps", &cmdScMapSTAMPs, "Produce STAMP-map from DropSeq FASTQ files")
+    //LONG_COMMAND("sc-multinom-em", &cmdScMultinomEM, "Multinomial EM clustering of single cell types")
+    //LONG_COMMAND("sc-multinom-gibbs", &cmdScMultinomGibbs, "Multinomial Gibbs sampling of single cell types")
+    //LONG_COMMAND("plp-find-mux-clust", &cmdPlpFindMuxClust, "(Experimental) Perform tSNE clustering on mux-seq data")
 
-    LONG_COMMAND_GROUP("Other tools", NULL)
-    LONG_COMMAND("gtf-util", &cmdGtfUtil, "A simple GTF utility")
-    LONG_COMMAND("plp-make-dge-matrix", &cmdPlpMakeDGEMatrix, "Make Digital Expression Matrix from Digital Pileups")
+    //LONG_COMMAND_GROUP("Other tools", NULL)
+    //LONG_COMMAND("gtf-util", &cmdGtfUtil, "A simple GTF utility")
+    //LONG_COMMAND("plp-make-dge-matrix", &cmdPlpMakeDGEMatrix, "Make Digital Expression Matrix from Digital Pileups")
   END_LONG_COMMANDS();
 
   cl.Add(new longCommands("Available Commands", longCommandlines));

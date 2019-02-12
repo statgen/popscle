@@ -140,4 +140,4 @@ if(NOT CRYPTOLIB)
     message(FATAL_ERROR "libcrypto library not found")
 endif()
 
-target_link_libraries(popscle ${CMAKE_CURRENT_SOURCE_DIR}/htslib/libhts.a ${ZLIB} ${BZIP2} ${LZMA} ${CURLLIB} ${CRYPTOLIB})
+target_link_libraries(popscle ${HTS_LIBRARIES} ${ZLIB} ${BZIP2} ${LZMA} ${CURLLIB} ${CRYPTOLIB})

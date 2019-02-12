@@ -58,11 +58,11 @@ longCommands::longCommands(const char * desc, longCommandList * lst)
 
   longCommandList * ptr = list + 1;  // first command
 
-  while (ptr->desc != NULL) {  // unless it is non-informative 
+  while (ptr->desc != NULL) {  // unless it is non-informative
     if (ptr->func != NULL) {  // if it is a real command
       index[ptr->desc] = ptr;  // map string to param
       int tmp = strlen(ptr->desc);   // if it is just a group
-      if (tmp > name_len) name_len = tmp; // modify group_len      
+      if (tmp > name_len) name_len = tmp; // modify group_len
     }
     else {
       int tmp = strlen(ptr->desc);          // if it is just a group
@@ -98,14 +98,14 @@ void longCommands::Status(longCommandList * ptr, int & line_len, bool & need_a_c
   int line_start = group_len ? group_len + 5 : 0;
   //int i;
 
-  if (ptr->func == NULL) {  // if group command, end previous group (if exists) 
+  if (ptr->func == NULL) {  // if group command, end previous group (if exists)
     fprintf(stderr, "%s %*s :", need_a_comma ? "\n" : "", group_len + 2, ptr->desc);
     need_a_comma = false;
     line_len = line_start;
   }
-  else {                     // otherwise, print argument name and 
+  else {                     // otherwise, print argument name and
     int item_len = 3 + strlen(ptr->desc) + need_a_comma; // + state.size();
-    
+
     if (item_len + line_len > CONSOLE_WIDTH - 2 && line_len > line_start) {
       line_len = line_start;
       fprintf(stderr, "%s\n%*s", need_a_comma ? "," : "", line_len,  "");
@@ -126,10 +126,10 @@ void longCommands::HelpMessage(longCommandList * ptr)
 {
   //int i;
 
-  if (ptr->func == NULL) {  // if group command, end previous group (if exists) 
+  if (ptr->func == NULL) {  // if group command, end previous group (if exists)
     fprintf(stderr, "\n== %s%s%s ==\n", ptr->desc, ptr->help ? " - " : "", ptr->help ? ptr->help : "");
   }
-  else {                     // otherwise, print argument name and 
+  else {                     // otherwise, print argument name and
     fprintf(stderr, "   - %-*s%s%s\n", name_len, ptr->desc, " : ", ptr->help ? ptr->help : "");
   }
 }
@@ -138,11 +138,11 @@ void longCommands::HelpMessage(longCommandList * ptr)
 void longCommands::HelpMessage()
 {
   if (!description.empty() && description[0] != 0)  // group option
-    fprintf(stderr, "\n%s:\n", description.c_str());    
+    fprintf(stderr, "\n%s:\n", description.c_str());
     //fprintf(stderr, "\n%s - %s\n", description.c_str(), helpstring.c_str());
 
   // for the rest of the group, print commands
-  for (longCommandList * ptr = list + 1; ptr->desc != NULL; ptr++)  
+  for (longCommandList * ptr = list + 1; ptr->desc != NULL; ptr++)
     HelpMessage(ptr);
 
   fprintf(stderr, "\n");
@@ -161,7 +161,7 @@ void longCommands::Status()
   int  line_len = 0;
 
   // for the rest of the group, print commands
-  for (longCommandList * ptr = list + 1; ptr->desc != NULL; ptr++)  
+  for (longCommandList * ptr = list + 1; ptr->desc != NULL; ptr++)
     Status(ptr, line_len, need_a_comma);
 
   fprintf(stderr, "\n");
@@ -182,14 +182,14 @@ int commandList::Read(int argc, char ** argv, int start)
   std::string cmd(argv[start]);
 
   //notice("pl.size() = %d", pl.size());
-  
+
   for(int32_t i=0; i < (int32_t)pl.size(); ++i) {
     longCommandList* ptr = pl[0]->Translate(argv[start]);
     if ( ptr != NULL ) {
-      //notice("%s %x %s", cmd.c_str(), ptr->func, ptr->desc);            
+      //notice("%s %x %s", cmd.c_str(), ptr->func, ptr->desc);
       if ( ( cmd == ptr->desc ) && ( ptr->func != NULL ) ) {
-	fprintf(stderr, "[cramore %s] -- %s\n\n", ptr->desc, ptr->help);
-	fprintf(stderr, " Copyright (c) 2009-2017 by Hyun Min Kang and Adrian Tan\n");
+	fprintf(stderr, "[popscle %s] -- %s\n\n", ptr->desc, ptr->help);
+	fprintf(stderr, " Copyright (c) 2009-2019 by Hyun Min Kang and Fan Zhang\n");
 	fprintf(stderr, " Licensed under the Apache License v2.0 http://www.apache.org/licenses/\n");
 	return ptr->func(argc-start, argv+start);
       }
@@ -197,7 +197,7 @@ int commandList::Read(int argc, char ** argv, int start)
   }
   HelpMessage();
   error("Cannot recognize the command %s. Run %s --help for detailed instruction", cmd.c_str(), argv[0]);
-  return 1;  
+  return 1;
 
   /*
   if ( index.find(cmd) == index.end() ) {
@@ -209,7 +209,7 @@ int commandList::Read(int argc, char ** argv, int start)
     //argv[start] = argv[0];
     return index[cmd].func(argc-start, argv+start);
     } */
-}  
+}
 
 void commandList::HelpMessage()
 {
@@ -240,7 +240,7 @@ void commandList::Status()
   for (int i=0; i<(int)pl.size(); i++)
     pl[i]->Status();
 
-  fprintf(stderr, "\nRun with --help for more detailed help messages of each argument.\n");  
+  fprintf(stderr, "\nRun with --help for more detailed help messages of each argument.\n");
   fprintf(stderr, "\n");
 
   if (errors.size()) {
