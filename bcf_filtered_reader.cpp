@@ -785,11 +785,11 @@ double BCFFilteredReader::calculate_af(bool useInfoField,
       int32_t* pacs = NULL;
       int32_t* pans = NULL;    
       int32_t n_acs = 0, n_ans = 0;
+      notice("WARNING: Cannot find AF field from INFO field in VCF file, now calculate AF from AC/AN");
       if ( bcf_get_info_int32(hdr, v, "AC", &pacs, &n_acs) < 0 ) // no AC
-	error("Cannot find AC field from INFO field");
+          error("Cannot find AC field from INFO field at %s:%d",bcf_get_chrom(hdr, v), bcf_get_end_pos1(v));
       if ( bcf_get_info_int32(hdr, v, "AN", &pans, &n_ans) < 0 ) // no AN
-	error("Cannot find AC field from INFO field");
-
+          error("Cannot find AN field from INFO field at %s:%d",bcf_get_chrom(hdr, v), bcf_get_end_pos1(v));
       double af = (double)pacs[0]/(double)pans[0];
       free(pacs);
       free(pans);

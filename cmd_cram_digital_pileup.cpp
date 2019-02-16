@@ -169,7 +169,7 @@ int32_t cmdCramDigitalPileup(int32_t argc, char** argv) {
   //double* gps = new double[nv*3];
   //for(int32_t i=0; i < nv * 3; ++i) 
   //  gps[i] = vr.get_posterior_at(i);
-  float snpaf=vr.calculate_af(true);
+  double snpaf=vr.calculate_af(true);
   int32_t snpid = scl.add_snp( vr.cursor()->rid, vr.cursor()->pos+1, vr.cursor()->d.allele[0][0], vr.cursor()->d.allele[1][0], snpaf, NULL);
   snpids.push_back(snpid);
 
