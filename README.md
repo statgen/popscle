@@ -60,7 +60,7 @@ $ make
 
 
 ### Using demuxlet and freemuxlet
-All softwares use a self-documentation utility. You can run each utility with -man or -help option to see the command line usages. Also, we offer some general practice with an example in tutorial (data is available here: https://ucsf.box.com/s/vg1bycvsjgyg63gkqsputprq5rxzjl6k).
+All softwares use a self-documentation utility. You can run each utility with -man or -help option to see the command line usages. Also, we offer some general practice with an example in tutorial (data is available here: https://drive.google.com/drive/folders/1wfnn132vMbZhicpWOZVbR_36YpIiojug?usp=sharing).
 
 #### demuxlet
 <pre>
