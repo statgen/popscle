@@ -241,7 +241,7 @@ Both `[prefix].best` and `[prefix].clust1.samples.gz` file contains the followin
  22. PRB.SNG1 - Posterior probability of the singlet assignment
 
 #### Additional output files from freemuxlet
-**_freemuxlet_** generates additional output files, such as `[prefix].clust1.vcf.gz`, `[prefix].lmix`, and optionally `[prefix].clust0.samples.gz`, `[prefix].clust0.vcf.gz` and `[prefix].ldist.gz` (with `--aux-files` argument). Each file contains the following information
+**_freemuxlet_** generates additional output files, such as `[prefix].clust1.vcf.gz`, `[prefix].lmix`, and optionally `[prefix].clust0.samples.gz`, `[prefix].clust0.vcf.gz` and `[prefix].ldist.gz` (with `--aux-files` argument). Each file contains the following information. As the auxilary files are experimental and may subject to change, use the information at your own risk.
 
 * The `[prefix].clust1.vcf.gz` file is the vcf file for each sample inferred and clustered from `freemuxlet`
 * The `[prefix].lmix` file contains basic statistics for each barcode
