@@ -48,12 +48,13 @@ Alternatively, `dsc-pileup` could also directly take SAM file without running `d
 
 ### Installing demuxlet/freemuxlet
 
-
+<pre>
 $ mkdir build
 
 $ cd build
 
 $ cmake ..
+</pre>
 
 <pre>
 In case any required libraries is missing, you may specify customized installing path by replacing "cmake .." with:
