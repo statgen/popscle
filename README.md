@@ -56,9 +56,9 @@ $ cd build
 $ cmake ..
 </pre>
 
-<pre>
 In case any required libraries is missing, you may specify customized installing path by replacing "cmake .." with:
 
+<pre>
 For libhts:
   - $ cmake -DHTS_INCLUDE_DIRS=/hts_absolute_path/include/  -DHTS_LIBRARIES=/hts_absolute_path/lib/libhts.a ..
 
