@@ -43,7 +43,7 @@ Alternatively, `dsc-pileup` could also directly take SAM file without running `d
 * If external reference sequence vcf file is available, **_demuxlet_** is recommended
 * Default setting alpha as 0.5, which assumes the expected proportion of 50% genetic mixture from two individuals, to get better estimates of doublets.
 * Set `--group-list` to a list of barcodes (i.e. barcodes.tsv from 10X) in `dsc-pileup` to speed things up and only get demultiplexing for cells called by other methods.
-* To reproduce the results presented in Figure 2 of the demuxlet paper, please go to: https://github.com/yelabucsf/demuxlet_paper_code/tree/master/fig2 to download the vcf and the outputs of demuxlet.
+* To reproduce the results presented in Figure 2 of the demuxlet paper, please use the original version of demuxlet, with the data downloadable at https://github.com/yelabucsf/demuxlet_paper_code/tree/master/fig2 . If you want to learn how to perform similar analysis with `popscle`, please go to https://github.com/statgen/popscle/wiki .
 * Check tutorial README.md for more detailed tutorial with example data
 
 ### Installing demuxlet/freemuxlet
