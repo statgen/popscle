@@ -1,15 +1,23 @@
 # popscle
 `popscle` is a suite of population scale analysis tools for single-cell genomics data. The key software tools in this repository includes `demuxlet` (version 2) and `freemuxlet`, a genotyping-free method to deconvolute barcoded cells by their identities while detecting doublets. 
 
-### Introduction
+### Quick Overview
 
 With `popscle`, we recommend analyzing single cell RNA-seq (and other single cell genomic) dataset in two steps.
 1. Use `dsc-pileup` to generate pileups around known variants from aligned sequence reads.
 2. Use `demuxlet` (with genotypes) or `freemuxlet` (without genotypes) to deconvolute the identities of barcoded cells. 
 
-`demuxlet` and `freemuxlet` are two software tools to deconvolute sample identity and identify multiplets when multiple samples are pooled by barcoded single cell sequencing. If external genotyping data for each sample is available, `demuxlet` would be recommended. On the other hand, if external genotyping data is not available, the genotyping-free version demuxlet, `freemuxlet`, would be recommended. 
+Read the tutorial at https://github.com/statgen/popscle/wiki , if you would like to learn how to run software tools in `popscle` by example.
 
-To reduce computation time, we need to run `dsc-pileup` before running `demuxlet` and `freemuxlet`. `dsc-pileup` is a software tool to pileup reads and corresponding base quality for  each overlapping SNPs and each barcode. By using pileup files, it would allow us to run demuxlet/freemuxlet pretty fast multiple times without going over the BAM file again. 
+Read the documentation below if you want a comprehensive documentation about these tools.
+
+### Introduction
+
+#### Overview
+
+`demuxlet` and `freemuxlet` are two software tools to deconvolute sample identity and identify multiplets when multiple samples are pooled by barcoded single cell sequencing. If external genotyping data for each sample is available (e.g. from SNP arrays), `demuxlet` would be recommended. On the other hand, if external genotyping data is not available, the genotyping-free version demuxlet, `freemuxlet`, would be recommended. You still need variant site list (in VCF) even if you intend to use `freemuxlet` in order to generate pileups.
+
+You need to run `dsc-pileup` before running `demuxlet` and `freemuxlet`. `dsc-pileup` is a software tool to pileup reads and corresponding base quality for  each overlapping SNPs and each barcode. By using pileup files, it would allow us to run demuxlet/freemuxlet pretty fast multiple times without going over the BAM file again. 
 
 `dsc-pileup` requires the following input files:
 
