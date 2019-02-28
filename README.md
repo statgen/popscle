@@ -210,35 +210,29 @@ Cell/droplet filtering options
 
 
 #### demuxlet/freemuxlet
-Both **_demuxlet_** and **_freemuxlet_** generate output file contains the best guess of the sample identity, with detailed statistics to reach to the best guess. It is called  `[prefix].best` for **_demuxlet_** and  `[prefix].clust1.samples.gz` for **_freemuxlet_** 
+In this package, both **_demuxlet_** and **_freemuxlet_** generate output file contains the best guess of the sample identity, with detailed statistics to reach to the best guess. It is called  `[prefix].best` for **_demuxlet_** and  `[prefix].clust1.samples.gz` for **_freemuxlet_**
 
-Both `[prefix].best` and `[prefix].clust1.samples.gz` file contains the following 19 columns, but `[prefix].clust1.samples.gz` contains one additional INT_ID column showing the numerated BARCODE ID. 
+Both `[prefix].best` and `[prefix].clust1.samples.gz` file contains the following 19 columns of content, but `[prefix].clust1.samples.gz` contains one additional INT_ID column showing the numerated BARCODE ID.
 
- 1. BARCODE - Cell barcode for the cell that is being assigned in this row
- 2. RD.TOTL - The total number of reads overlapping with variant sites for each droplet.
- 3. RD.PASS - The total number of reads that passed the quality threshold, such as mapping quality, base quality. 
- 4. RD.UNIQ - The total number of UMIs that passed the quality threshold. If a UMI is observed in a single variant multiple times, it won't be counted more. If a UMI is observed across multiple variants, it will be counted as different.
- 5. N.SNP   - The total number of variants overlapping with any read in the droplet.
- 6. BEST    - The best assignment for sample ID.
-    * For singlets, SNG-<sample ID>
-    * For doublets, DBL-<sample ID1>-<sampleID2>-<mixture rate>
-    * For ambiguous droplets, , AMB-<best-singlet-sampleID>-<next-best-singlet-sampleID>-<doublet ID1/ID2>)
- 7. SNG.1ST - The best singlet assignment for sample ID
- 8. SNG.LLK1 - The log(likelihood that the ID from SNG.1ST is the correct assignment)       
- 9. SNG.2ND - The next best singlet assignment for sample ID
- 10. SNG.LLK2 - The log(likelihood that the ID from SNG.2ND is the correct assignment)        
- 11. SNG.LLK0 - The log-likelihood from allele frequencies only      
- 12. DBL.1ST - The sample ID that is most likely included if the assignment is a doublet
- 13. DBL.2ND - The sample ID that is next most likely included ifthe assignment is a doublet
- 14. ALPHA   - % Mixture Proportion
- 15. LLK12   - The log(likelihood that the ID is a doublet)
- 16. LLK1    - The log(likelihood that the ID from DBL.1ST is the correct singlet assignment)
- 17. LLK2    - The log(likelihood that the ID from DBL.2ND is the correct singlet assignment)
- 18. LLK10   - The log(likelihood that the ID from DBL.1ST is one of the doublet, and the other doublet identity is calculated from allele frequencies only)   
- 19. LLK20   - The log(likelihood that the ID from DBL.2ND is one of the doublet, and the other doublet identity is calculated from allele frequencies only)   
- 20. LLK00   - The log(likelihood that the droplet is doublet, but both identities are calculated from allele frequencies only)
- 21. PRB.DBL - Posterior probability of the doublet assignment
- 22. PRB.SNG1 - Posterior probability of the singlet assignment
+ 1. BARCODE - Cell barcode for the cell that is being assigned in this row.
+ 2. NUM.SNPS - The total number of variants overlapping with any read in the droplet.
+ 3. NUM.READS - The total number of reads overlapping with variant sites for each droplet.
+ 4. DROPLET.TYPE - Inferred droplet type: {SNG:singlet, DBL:doublet, AMB: ambiguous}.
+ 5. BEST.GUESS    - The best assignment for sample ID. e.g. <sample ID1>,<sampleID2> for DBL.
+ 6. BEST.LLK - The log(likelihood that the ID from BEST.GUESS is the correct assignment).
+ 7. NEXT.GUESS - The next best assignment for sample ID.
+ 8. NEXT.LLK - The log(likelihood that the ID from NEXT.GUESS is the correct assignment).
+ 9. DIFF.LLK.BEST.NEXT - The log-likelihood difference between NEXT.LLK and BEST.LLK.
+ 10. BEST.POSTERIOR - The posterior probability of the best assignment.
+ 11. SNG.POSTERIOR - The posterior probability of being singlet.
+ 12. SNG.BEST.GUESS - The best singlet assignment for sample ID.
+ 13. SNG.BEST.LLK   - The log(likelihood that the ID from SNG.BEST.GUESS is the correct singlet assignment).
+ 14. SNG.NEXT.GUESS   - The next best singlet assignment for sample ID.
+ 15. SNG.NEXT.LLK    - The log(likelihood that the ID from SNG.NEXT.GUESS is the correct singlet assignment).
+ 16. SNG.ONLY.POSTERIOR    - The posterior probabiltiy of the singlet assignment given it is singlet.
+ 17. DBL.BEST.GUESS   - The best doublet assignment for sample ID.
+ 18. DBL.BEST.LLK   - The log(likelihood that the ID from DBL.BEST.GUESS is the correct assignment).
+ 19. DIFF.LLK.SNG.DBL   - The log-likelihood difference between SNG.BEST.LLK and DBL.BEST.LLK.
 
 #### Additional output files from freemuxlet
 **_freemuxlet_** generates additional output files, such as `[prefix].clust1.vcf.gz`, `[prefix].lmix`, and optionally `[prefix].clust0.samples.gz`, `[prefix].clust0.vcf.gz` and `[prefix].ldist.gz` (with `--aux-files` argument). Each file contains the following information. As the auxilary files are experimental and may subject to change, use the information at your own risk.
