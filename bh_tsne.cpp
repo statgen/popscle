@@ -43,7 +43,7 @@
 #include "bh_tsne.h"
 
 
-using namespace std;
+//using namespace std;
 
 // Perform t-SNE
 void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, int rand_seed, bool skip_random_init) {
@@ -146,13 +146,13 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
   for(int iter = 0; iter < max_iter; iter++) {
     
     // Compute (approximate) gradient
-    if ( isnan(Y[0]) || isinf(Y[0]) ) { fprintf(stderr,"0nan observed at iter=%d\n",iter); exit(1); }
+    if ( std::isnan(Y[0]) || std::isinf(Y[0]) ) { fprintf(stderr,"0nan observed at iter=%d\n",iter); exit(1); }
     
     if(exact) computeExactGradient(P, Y, N, no_dims, dY);
     else computeGradient(P, row_P, col_P, val_P, Y, N, no_dims, dY, theta);
 
     for(int i=0; i < N * no_dims; ++i) {
-      if ( isnan(dY[i]) || isinf(dY[i]) ) { fprintf(stderr,"dY[%d]=%lg observed at iter=%d\n",i, dY[i], iter); }
+      if ( std::isnan(dY[i]) || std::isinf(dY[i]) ) { fprintf(stderr,"dY[%d]=%lg observed at iter=%d\n",i, dY[i], iter); }
     }
     
     // Update gains
@@ -163,15 +163,15 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     for(int i = 0; i < N * no_dims; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dY[i];
     for(int i = 0; i < N * no_dims; i++)  {
       Y[i] = Y[i] + uY[i];
-      if ( isnan(Y[i]) || isinf(Y[i]) ) { fprintf(stderr,"Y[%d]=%lg, uY[%d]=%lg, dY[%d]=%lg, gains[%d]=%lg observed\n", i, Y[i], i, uY[i], i, dY[i], i, gains[i]); exit(1); }                          
+      if ( std::isnan(Y[i]) || std::isinf(Y[i]) ) { fprintf(stderr,"Y[%d]=%lg, uY[%d]=%lg, dY[%d]=%lg, gains[%d]=%lg observed\n", i, Y[i], i, uY[i], i, dY[i], i, gains[i]); exit(1); }
     }
 
-    if ( isnan(Y[0]) || isinf(Y[0]) ) { fprintf(stderr,"1nan observed at iter=%d\n",iter); exit(1); }            
+    if ( std::isnan(Y[0]) || std::isinf(Y[0]) ) { fprintf(stderr,"1nan observed at iter=%d\n",iter); exit(1); }
 
     // Make solution zero-mean
     zeroMean(Y, N, no_dims);
 
-    if ( isnan(Y[0]) || isinf(Y[0]) ) { fprintf(stderr,"2nan observed at iter=%d\n",iter); exit(1); }        
+    if ( std::isnan(Y[0]) || std::isinf(Y[0]) ) { fprintf(stderr,"2nan observed at iter=%d\n",iter); exit(1); }
     
     // Stop lying about the P-values after a while, and switch momentum
     if(iter == stop_lying_iter) {
@@ -320,7 +320,7 @@ double TSNE::evaluateError(double* P, double* Y, int N, int D) {
   for(int n = 0; n < N * N; n++) {
     C += P[n] * log((P[n] + FLT_MIN) / (Q[n] + FLT_MIN));
 
-    if ( isnan(C) || isinf(C) ) {
+    if ( std::isnan(C) || std::isinf(C) ) {
       fprintf(stderr,"nan observed at n = %d, N = %d, D = %d, P[n] = %lg, Q[n] = %lg, DD[n] = %lg, FLT_MIN = %g, DBL_MIN = %lg, sum_Q = %lg\n", n, N, D, P[n], Q[n], DD[n], FLT_MIN, DBL_MIN, sum_Q);
       exit(-1);
     }
@@ -671,7 +671,7 @@ void TSNE::zeroMean(double* X, int N, int D) {
   for(int n = 0; n < N; n++) {
     for(int d = 0; d < D; d++) {
       mean[d] += X[nD + d];
-      if ( isnan(mean[d]) || isinf(mean[d]) ) { fprintf(stderr,"mean[%d]=nan, X[%d]=%lg observed at n=%d, d=%d\n", d, nD+d, X[nD+d], n, d); exit(1); }                    
+      if ( std::isnan(mean[d]) || std::isinf(mean[d]) ) { fprintf(stderr,"mean[%d]=nan, X[%d]=%lg observed at n=%d, d=%d\n", d, nD+d, X[nD+d], n, d); exit(1); }
     }
     nD += D;
   }

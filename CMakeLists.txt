@@ -11,10 +11,14 @@ if(NOT HTS_INCLUDE_DIRS )
     message(FATAL_ERROR "libhts HTS_INCLUDE_DIRS not found")
 endif()
 
+message(STATUS ${HTS_INCLUDE_DIRS})
+
 find_library(HTS_LIBRARIES hts HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
 if(NOT HTS_LIBRARIES)
     message(FATAL_ERROR "libhts HTS_LIBRARIES not found")
 endif()
+
+message(STATUS ${HTS_LIBRARIES})
 
 include_directories(${HTS_INCLUDE_DIRS})
 
