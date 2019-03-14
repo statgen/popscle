@@ -472,15 +472,17 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
         int32_t npairs = nSamples * (nSamples + 1) / 2;
         double log_single_prior = log((1.0 - doublet_prior) / nSamples);
         double log_double_prior = log(doublet_prior / nSamples / (nSamples - 1) * 2.0);
-
+        //iterate through each droplet
         for (int32_t i = 0; i < scl.nbcs; ++i) {
             std::vector<double> llks(npairs, 0);
-            std::map<int32_t, snp_droplet_pileup *>::iterator it;
+            std::map<int32_t, snp_droplet_pileup *>::iterator it;//index, pileup ptr
+            //iterate through each snp
             for (it = cell_snp_plps[i].begin(); it != cell_snp_plps[i].end(); ++it) {
                 double af = scl.snps[it->first].af;
                 std::vector<double> lks(npairs, 0);
                 double lk;
                 double *glis = it->second->gls;
+                //iterate through each cluster
                 for (int32_t j = 0; j < nSamples; ++j) {
                     snp_droplet_pileup &sdp1 = clustPileup[j][it->first];
                     gp1s[0] = (1.0 - af) * (1.0 - af) * sdp1.gls[0];
@@ -490,6 +492,7 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
                     gp1s[0] /= sum1;
                     gp1s[1] /= sum1;
                     gp1s[2] /= sum1;
+                    //iterate through lower triangle
                     for (int32_t k = 0; k < j; ++k) {
                         snp_droplet_pileup &sdp2 = clustPileup[k][it->first];
                         // Pr(D|g1,g2)Pr(g1|C1)Pr(g2|C2)Pr(C1)Pr(C2)
@@ -616,7 +619,7 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
                 types[i] = 2; // ambiguous
                 ++namb;
 
-                bestPPs[i] = (sngBestLLKs[i] + log_single_prior - sumLLKs[i]);
+                bestPPs[i] = exp(sngBestLLKs[i] + log_single_prior - sumLLKs[i]);
                 jBests[i] = kBests[i] = sBests[i];
                 bestLLKs[i] = sngBestLLKs[i];
 
