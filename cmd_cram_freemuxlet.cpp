@@ -320,7 +320,7 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
                     votes[j] = rand() / (RAND_MAX + 1.) / 1000.;
                 }
 
-                for (int32_t j = 0; j < scl.nbcs; ++j) {
+                for (int32_t j = 0; j < scl.nbcs; ++j) {//clust i based on distance with the rest of the droplets
                     if (si != j) {
                         double bf = (j < si) ? (dropDs[si][j].llk2 - dropDs[si][j].llk0) : (dropDs[j][si].llk2 -
                                                                                             dropDs[j][si].llk0);
