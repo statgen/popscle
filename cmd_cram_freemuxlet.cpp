@@ -28,8 +28,9 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
     double bfThres = 5.41;
     double fracInitClust = 1.;// 0.50; // use 50% of cells for initial clustering
     bool auxFiles = false;
-    int32_t initIteration = 10;
+    int32_t initIteration = 5;
     bool keepInitMissing = false;
+    double err=0.05;
 
     paramList pl;
 
@@ -395,7 +396,7 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
 
     if (initIteration > 0) {
 
-        for (int32_t iter = 0; iter < 10; ++iter) {
+        for (int32_t iter = 0; iter < initIteration; ++iter) {
             int32_t changed = 0;
 
             std::vector<int32_t> orand(scl.nbcs);
@@ -594,7 +595,6 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
                         gp2s[0] /= sum2;
                         gp2s[1] /= sum2;
                         gp2s[2] /= sum2;
-
                         lk = 0;
                         for (int32_t g1 = 0; g1 < 3; ++g1) {
                             for (int32_t g2 = 0; g2 < 3; ++g2) {
@@ -740,6 +740,206 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
         notice("Refining per-cluster genotype likelihoods.... %d singlets, %d doublets, and %d ambiguous", nsingle,
                scl.nbcs - nsingle - namb, namb);
     }
+
+    // fix gp refine cluster
+    {
+        notice("Final inferring doublets and refining clusters..");
+        double gp1s[3], gp2s[3], sum1, sum2;
+        int32_t npairs = nSamples * (nSamples + 1) / 2;
+        double log_single_prior = log((1.0 - doublet_prior) / nSamples);
+        double log_double_prior = log(doublet_prior / nSamples / (nSamples - 1) * 2.0);
+        //iterate through each droplet
+        for (int32_t i = 0; i < scl.nbcs; ++i) {
+            std::vector<double> llks(npairs, 0);
+            std::map<int32_t, snp_droplet_pileup *>::iterator it;//index, pileup ptr
+            //iterate through each snp
+            for (it = cell_snp_plps[i].begin(); it != cell_snp_plps[i].end(); ++it) {
+                //genotyping error
+                if (err > 0.999) err = 0.999;
+                if (err < 0) err = 0;
+
+                double af = scl.snps[it->first].af;
+                std::vector<double> lks(npairs, 0);
+                double lk;
+                double *glis = it->second->gls;
+                //iterate through each cluster
+                for (int32_t j = 0; j < nSamples; ++j) {
+                    snp_droplet_pileup &sdp1 = clustPileup[j][it->first];
+                    gp1s[0] = (1.0 - af) * (1.0 - af) * sdp1.gls[0];
+                    gp1s[1] = 2 * af * (1.0 - af) * sdp1.gls[4];
+                    gp1s[2] = af * af * sdp1.gls[8];
+                    sum1 = gp1s[0] + gp1s[1] + gp1s[2];
+                    gp1s[0] /= sum1;
+                    gp1s[1] /= sum1;
+                    gp1s[2] /= sum1;
+                    //genotyping error
+                    gp1s[0] = (1 - err) * gp1s[0] + err * (1.0 - af) * (1.0 - af);
+                    gp1s[1] = (1 - err) * gp1s[1] + err * 2 * (1.0 - af) * af;
+                    gp1s[2] = (1 - err) * gp1s[2] + err * af * af;
+
+                    //iterate through lower triangle
+                    for (int32_t k = 0; k < j; ++k) {
+                        snp_droplet_pileup &sdp2 = clustPileup[k][it->first];
+                        // Pr(D|g1,g2)Pr(g1|C1)Pr(g2|C2)Pr(C1)Pr(C2)
+                        gp2s[0] = (1.0 - af) * (1.0 - af) * sdp2.gls[0];
+                        gp2s[1] = 2 * af * (1.0 - af) * sdp2.gls[4];
+                        gp2s[2] = af * af * sdp2.gls[8];
+                        sum2 = gp2s[0] + gp2s[1] + gp2s[2];
+                        gp2s[0] /= sum2;
+                        gp2s[1] /= sum2;
+                        gp2s[2] /= sum2;
+                        //genotyping error
+                        gp2s[0] = (1 - err) * gp2s[0] + err * (1.0 - af) * (1.0 - af);
+                        gp2s[1] = (1 - err) * gp2s[1] + err * 2 * (1.0 - af) * af;
+                        gp2s[2] = (1 - err) * gp2s[2] + err * af * af;
+
+                        lk = 0;
+                        for (int32_t g1 = 0; g1 < 3; ++g1) {
+                            for (int32_t g2 = 0; g2 < 3; ++g2) {
+                                lk += (glis[g1 * 3 + g2] * gp1s[g1] * gp2s[g2]);
+                            }
+                        }
+                        lks[j * (j + 1) / 2 + k] = lk;
+                    }
+                    lk = 0;
+                    for (int32_t g1 = 0; g1 < 3; ++g1) {
+                        lk += (glis[g1 * 3 + g1] * gp1s[g1]);
+                    }
+                    lks[j * (j + 1) / 2 + j] = lk;
+                }
+                for (int32_t i = 0; i < npairs; ++i)
+                    llks[i] += log(lks[i]);
+            }
+
+            //int32_t jBest = -1, kBest = -1, jNext = -1, kNext = -1;
+            int32_t sBest = -1, sNext = -1, dBest1 = -1, dBest2 = -1, dNext1 = -1, dNext2 = -1;
+            //double bestLLK = -1e300;
+            //double nextLLK = -1e300;
+            double sngBestLLK = -1e300;
+            double sngNextLLK = -1e300;
+            double dblBestLLK = -1e300;
+            double dblNextLLK = -1e300;
+            double sumLLK = -1e300;
+            double sngLLK = -1e300;
+            double tmpLLK;
+            for (int32_t j = 0; j < nSamples; ++j) {
+                for (int32_t k = 0; k < j; ++k) {
+                    tmpLLK = llks[j * (j + 1) / 2 + k]; // + log_double_prior;
+                    if (tmpLLK > dblBestLLK) {
+                        dNext1 = dBest1;
+                        dNext2 = dBest2;
+                        dblNextLLK = dblBestLLK;
+                        dBest1 = j;
+                        dBest2 = k;
+                        dblBestLLK = tmpLLK;
+                    } else if (tmpLLK > dblNextLLK) {
+                        dNext1 = j;
+                        dNext2 = k;
+                        dblNextLLK = tmpLLK;
+                    }
+                    sumLLK = logAdd(sumLLK, tmpLLK + log_double_prior);
+                }
+
+                tmpLLK = llks[j * (j + 1) / 2 + j]; //+ log_single_prior;
+                if (tmpLLK > sngBestLLK) {
+                    sNext = sBest;
+                    sngNextLLK = sngBestLLK;
+                    sBest = j;
+                    sngBestLLK = tmpLLK;
+                } else if (tmpLLK > sngNextLLK) {
+                    sNext = j;
+                    sngNextLLK = tmpLLK;
+                }
+                sumLLK = logAdd(sumLLK, tmpLLK + log_single_prior);
+                sngLLK = logAdd(sngLLK, tmpLLK + log_single_prior);
+            }
+
+            sBests[i] = sBest;
+            sngBestLLKs[i] = sngBestLLK;
+            sNexts[i] = sNext;
+            sngNextLLKs[i] = sngNextLLK;
+            dBest1s[i] = dBest1;
+            dBest2s[i] = dBest2;
+            dblBestLLKs[i] = dblBestLLK;
+            dNext1s[i] = dNext1;
+            dNext2s[i] = dNext2;
+            dblNextLLKs[i] = dblNextLLK;
+            sngPPs[i] = exp(sngLLK - sumLLK);
+            sngOnlyPPs[i] = exp(sngBestLLK + log_single_prior - sngLLK);
+            sumLLKs[i] = sumLLK;
+        }
+
+        //clustPileup.clear();
+        //clustPileup.resize(nSamples);
+        int32_t nsingle = 0, namb = 0;
+        for (int32_t i = 0; i < scl.nbcs; ++i) {
+            if (dblBestLLKs[i] > sngBestLLKs[i] + 2) { // best call is doublet
+                types[i] = 1; // doublet
+                bestPPs[i] = (dblBestLLKs[i] + log_double_prior - sumLLKs[i]);
+                jBests[i] = dBest1s[i];
+                kBests[i] = dBest2s[i];
+                bestLLKs[i] = dblBestLLKs[i];
+
+                if (dblNextLLKs[i] > sngBestLLKs[i] + 2) { // next best is doublet
+                    jNexts[i] = dNext1s[i];
+                    kNexts[i] = dNext2s[i];
+                    nextLLKs[i] = dblNextLLKs[i];
+                } else {
+                    jNexts[i] = kNexts[i] = sBests[i];  // next best is singlet
+                    nextLLKs[i] = sngBestLLKs[i];
+                }
+            } else if (sngBestLLKs[i] > sngNextLLKs[i] + 2) { // double call is singlet
+                types[i] = 0; // singlet
+                ++nsingle;
+
+                bestPPs[i] = (sngBestLLKs[i] + log_single_prior - sumLLKs[i]);
+                jBests[i] = kBests[i] = sBests[i];
+                bestLLKs[i] = sngBestLLKs[i];
+
+                if (dblBestLLKs[i] > sngNextLLKs[i] + 2) { // next best is doublet
+                    jNexts[i] = dBest1s[i];
+                    kNexts[i] = dBest2s[i];
+                    nextLLKs[i] = dblBestLLKs[i];
+                } else {
+                    jNexts[i] = kNexts[i] = sNexts[i];  // next best is also singlet
+                    nextLLKs[i] = sngNextLLKs[i];
+                }
+            } else {  // ambiguous calls, use singlet as the best call
+                types[i] = 2; // ambiguous
+                ++namb;
+
+                bestPPs[i] = exp(sngBestLLKs[i] + log_single_prior - sumLLKs[i]);
+                jBests[i] = kBests[i] = sBests[i];
+                bestLLKs[i] = sngBestLLKs[i];
+
+                if (dblBestLLKs[i] > sngNextLLKs[i] + 2) {
+                    jNexts[i] = dBest1s[i];
+                    kNexts[i] = dBest2s[i];
+                    nextLLKs[i] = dblNextLLKs[i];
+                } else {
+                    jNexts[i] = kNexts[i] = sNexts[i];
+                    nextLLKs[i] = sngNextLLKs[i];
+                }
+            }
+
+            // old criteria
+            //if ( bestPPs[i] < 0.8 ) ++namb;
+            //else if ( jBests[i] == kBests[i] ) ++nsingle;
+
+//            std::map<int32_t, snp_droplet_pileup *>::const_iterator it = cell_snp_plps[i].begin();
+//            while (it != cell_snp_plps[i].end()) {
+//                if ((jBests[i] == kBests[i]) && (types[i] == 0)) {
+//                    clustPileup[jBests[i]][it->first].merge(*it->second);
+//                }
+//                ++it;
+//            }
+        }
+
+        notice("Final refining per-cluster genotype likelihoods.... %d singlets, %d doublets, and %d ambiguous", nsingle,
+               scl.nbcs - nsingle - namb, namb);
+    }
+
+
 
 
     htsFile *vc1 = hts_open((outPrefix + ".clust1.vcf.gz").c_str(), "wz");
