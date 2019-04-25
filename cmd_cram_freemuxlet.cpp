@@ -26,11 +26,11 @@ int32_t cmdCramFreemuxlet(int32_t argc, char **argv) {
     int32_t minCoveredSNPs = 0;
     int32_t nSamples = 0;
     double bfThres = 5.41;
-    double fracInitClust = 1.;// 0.50; // use 50% of cells for initial clustering
+    double fracInitClust = 0.50; // use 50% of cells for initial clustering
     bool auxFiles = false;
     int32_t initIteration = 5;
     bool keepInitMissing = false;
-    double err=0.05;
+    double err=0.10;
 
     paramList pl;
 
