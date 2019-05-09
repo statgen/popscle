@@ -69,8 +69,11 @@ For lzma:
   - $ cmake -DLZMA_INCLUDE_DIRS=/lzma_absolute_path/include/ -DLZMA_LIBRARIES=/lzma_absolute_path/lib/liblzma.a ..
 </pre>
 
-$ make
+Finally, to build the binary, run
 
+<pre>
+$ make
+</pre>
 
 ### Using demuxlet and freemuxlet
 All softwares use a self-documentation utility. You can run each utility with -man or -help option to see the command line usages. Also, we offer some general practice with an example in tutorial (data is available here: https://drive.google.com/drive/folders/1wfnn132vMbZhicpWOZVbR_36YpIiojug?usp=sharing).
