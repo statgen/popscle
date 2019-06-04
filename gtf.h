@@ -138,7 +138,8 @@ public:
 };
 
 struct gtfComp {
-  bool operator()(const gtfElement* lhs, const gtfElement* rhs) const {
+    template<typename T>
+  bool operator()(const T* lhs, const T* rhs) const {
     if ( lhs->locus == rhs->locus ) {
       return ((int64_t)rhs - (int64_t)lhs > 0);
     }
