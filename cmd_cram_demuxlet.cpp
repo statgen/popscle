@@ -997,7 +997,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char **argv) {
         sngOnlyPP = exp(sngBestLLK + log_single_prior - sngLLK);
 //BARCODE	NUM.SNPS	NUM.READS	DROPLET.TYPE	BEST.GUESS	BEST.LLK	NEXT.GUESS	NEXT.LLK	DIFF.LLK.BEST.NEXT	BEST.POSTERIOR	SNG.POSTERIOR	SNG.BEST.GUESS	SNG.BEST.LLK	SNG.NEXT.GUESS	SNG.NEXT.LLK	SNG.ONLY.POSTERIOR	DBL.BEST.GUESS	DBL.BEST.LLK	DIFF.LLK.SNG.DBL
         hprintf(wbest,
-                "%s\t%u\t%d\t%s\t%s,%s\t%.2lf\t%s,%s\t%.2lf\t%.2lg\t%.2lg\t%s\t%.2lf\t%s\t%.2lf\t%.5lf\t%s,%s\t%.2lf\t%.2lf\n",
+                "%s\t%u\t%d\t%s\t%s,%s\t%.2lf\t%s,%s\t%.2lf\t%.2lg\t%.2lg\t%.2lg\t%s\t%.2lf\t%s\t%.2lf\t%.5lf\t%s,%s\t%.2lf\t%.2lf\n",
                 it0->first.c_str(),
                 scl.cell_umis[i].size(),
                 scl.cell_uniq_reads[i],
