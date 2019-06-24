@@ -801,7 +801,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char **argv) {
         int32_t sBest = -1, sNext = -1, dBest1 = -1, dBest2 = -1, dNext1 = -1, dNext2 = -1, dblBestAlpha = -1, dblNextAlpha = -1;
         double sngBestLLK = -1e300, sngNextLLK = -1e300;
         double dblBestLLK = -1e300, dblNextLLK = -1e300;
-        double sumLLK = -1e-300, sngLLK = -1e-300;
+        double sumLLK = -1e300, sngLLK = -1e300;
         double bestPP = -1e300, sngPP = -1e300, sngOnlyPP = -1e300;
         double log_single_prior = log((1.0 - doublet_prior) / nv);
         double log_doublet_prior1 = log(doublet_prior / nv / (nv - 1.) / (nAlpha - 1.));
@@ -816,35 +816,42 @@ int32_t cmdCramDemuxlet(int32_t argc, char **argv) {
         //double sumSingle = 0, sumDouble = 0;
         for (j = jbeg; j < jend; ++j) {
             //sumSingle += (exp(llksAB[(j-jbeg)*nv*nAlpha] - maxLLK)* (1.-doublet_prior) / (jend-jbeg));
-            sumLLK = logAdd(sumLLK, llksAB[(j - jbeg) * nv * nAlpha] + log_single_prior);
-            sngLLK = logAdd(sngLLK, llksAB[(j - jbeg) * nv * nAlpha] + log_single_prior);
 
             for (k = 0; k < nv; ++k) {
-                if (j == k) continue; // singlets
-                for (n = 1; n < nAlpha; ++n) {
+//                if (j == k) continue; // singlets
+                if (j == k)
+                {
+                  for (n = 0; n < nAlpha; ++n) {
+                    sumLLK = logAdd(sumLLK, llksAB[(j - jbeg) * nv * nAlpha + k * nAlpha + n] + log_single_prior);
+                    sngLLK = logAdd(sngLLK, llksAB[(j - jbeg) * nv * nAlpha + k * nAlpha + n] + log_single_prior);
+                  }
+                }
+                else
+                  for (n = 0; n < nAlpha; ++n) {
                     if (gridAlpha[n] == 0.5) {
-                        if (k > j) continue;
+//                        if (k > j) continue;
                         sumLLK = logAdd(sumLLK, llksAB[(j - jbeg) * nv * nAlpha + k * nAlpha + n] + log_doublet_prior2);
-                    } else
-                        sumLLK = logAdd(sumLLK, llksAB[(j - jbeg) * nv * nAlpha + k * nAlpha + n] + log_doublet_prior1);
+                    } else {
+                      sumLLK = logAdd(sumLLK, llksAB[(j - jbeg) * nv * nAlpha + k * nAlpha + n] + log_doublet_prior1);
+                    }
                     //sumDouble += ( exp(llksAB[(j-jbeg)*nv*nAlpha+k*nAlpha+n] - maxLLK)* doublet_prior / (jend-jbeg) / (nv-1) / (nAlpha-1) / (gridAlpha[n] == 0.5 ? 2.0 : 1.0));
                 }
             }
         }
 
-        //int32_t iSing1 = -1, iSing2 = -1;
+      //int32_t iSing1 = -1, iSing2 = -1;
         //double maxSing1 = -1e300, maxSing2 = -1e300;
 
         // scan for best-matching singlets
         for (j = jbeg; j < jend; ++j) {
-            if (sngBestLLK < llksAB[(j - jbeg) * nv * nAlpha]) {
+            if (sngBestLLK < llksAB[(j - jbeg) * nv * nAlpha + (j - jbeg) * nAlpha]) {
                 sngNextLLK = sngBestLLK;
                 sNext = sBest;
                 sBest = j;
-                sngBestLLK = llksAB[(j - jbeg) * nv * nAlpha];
-            } else if (sngNextLLK < llksAB[(j - jbeg) * nv * nAlpha]) {
+                sngBestLLK = llksAB[(j - jbeg) * nv * nAlpha + (j - jbeg) * nAlpha];
+            } else if (sngNextLLK < llksAB[(j - jbeg) * nv * nAlpha + (j - jbeg) * nAlpha]) {
                 sNext = j;
-                sngNextLLK = llksAB[(j - jbeg) * nv * nAlpha];
+                sngNextLLK = llksAB[(j - jbeg) * nv * nAlpha + (j - jbeg) * nAlpha];
             }
 
             /* hprintf(wsing2,"%s\t%s\t%d\t%d\t%d\t%d\t%.4lf\t%.4lf\t%.3lg\n",
@@ -955,7 +962,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char **argv) {
             }
         } else if (sngBestLLK > sngNextLLK + 2) {
             bestType = "SNG";
-            bestPP = sngBestLLK + log_single_prior - sumLLK;
+            bestPP = exp(sngBestLLK + log_single_prior - sumLLK);
             jBest = kBest = sBest;
             bestLLK = sngBestLLK;
             alphaBest = 0;
@@ -974,7 +981,7 @@ int32_t cmdCramDemuxlet(int32_t argc, char **argv) {
             }
         } else {
             bestType = "AMB";
-            bestPP = sngBestLLK + log_single_prior - sumLLK;
+            bestPP = exp(sngBestLLK + log_single_prior - sumLLK);
             jBest = kBest = sBest;
             bestLLK = sngBestLLK;
             alphaBest = 0;
