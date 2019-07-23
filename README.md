@@ -45,7 +45,7 @@ Alternatively, `dsc-pileup` could also directly take SAM file without running `d
 * Set `--group-list` to a list of barcodes (i.e. barcodes.tsv from 10X) in `dsc-pileup` to speed things up and only get demultiplexing for cells called by other methods.
 * To reproduce the results presented in Figure 2 of the demuxlet paper, please use the original version of demuxlet, with the data downloadable at https://github.com/yelabucsf/demuxlet_paper_code/tree/master/fig2 . If you want to learn how to perform similar analysis with `popscle`, please go to https://github.com/statgen/popscle/wiki .
 * Check tutorial README.md for more detailed tutorial with example data
-
+* If you start process in docker, use cmdline `docker run <imagename> "<popscle-arguments>"`(e.g. `docker run popscle "freemuxlet"`) to run docker tasks.
 ### Installing demuxlet/freemuxlet
 
 <pre>
