@@ -100,7 +100,13 @@ BAMOrderedReader::BAMOrderedReader(std::string file_name, std::vector<GenomeInte
     interval_index = 0;
 
     random_access_enabled = intervals_present && index_loaded;
-};
+}
+
+BAMOrderedReader::~BAMOrderedReader()
+{
+    close();
+    //fprintf(stderr,"-- BAMOrderedReader object was deleted\n");
+}
 
 /**
  * Jump to interval. Returns false if not successful.
@@ -188,5 +194,17 @@ bool BAMOrderedReader::read(bam1_t *s)
  */
 void BAMOrderedReader::close()
 {
-    sam_close(file);
+    if ( hdr ) bam_hdr_destroy(hdr);
+    if ( itr ) bam_itr_destroy(itr);
+    if ( idx ) hts_idx_destroy(idx);
+    if ( s ) bam_destroy1(s);
+    if ( file ) sam_close(file);
+    if ( str.s ) free(str.s);
+
+    hdr = nullptr;
+    itr = nullptr;
+    idx = nullptr;
+    s = nullptr;
+    file = nullptr;
+    str.s = nullptr;
 }

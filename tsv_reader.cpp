@@ -12,9 +12,18 @@
 bool tsv_reader::open(const char* filename) {
   this->filename = filename;
   hp = hts_open(filename, "r");
-  if ( hp == NULL ) return false;
+  if ( hp == NULL ) {
+    error("[E:%s:%s %s] Cannot open file %s for reading", __FILE__, __LINE__, __FUNCTION__, filename);    
+    return false;
+  }
   return true;
-    //error("[E:%s:%s %s] Cannot open file %s for reading", __FILE__, __LINE__, __FUNCTION__, filename);
+}
+
+bool tsv_reader::close() {
+  if ( hp == NULL ) return false;
+  int32_t ret = hts_close(hp);
+  hp = NULL;
+  return ret == 0;
 }
 
 int32_t tsv_reader::read_line() {

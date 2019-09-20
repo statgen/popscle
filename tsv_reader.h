@@ -25,6 +25,7 @@ public:
   int32_t delimiter;
   
   bool open(const char* filename);
+  bool close();
   int32_t read_line();
   const char* str_field_at(int32_t idx);
   int32_t int_field_at(int32_t idx);

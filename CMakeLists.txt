@@ -25,7 +25,6 @@ include_directories(${HTS_INCLUDE_DIRS})
 add_executable(popscle
         allele.cpp
         allele.h
-        bam_endian.h
         bam_ordered_reader.cpp
         bam_ordered_reader.h
         bcf_chunked_reader.cpp
@@ -35,23 +34,13 @@ add_executable(popscle
         bcf_filtered_reader.h
         bcf_variant_key.h
         bgzf.h
-        bh_tsne.cpp
-        bh_tsne.h
         cmd_cram_demuxlet.cpp
         cmd_cram_digital_pileup.cpp
         cmd_cram_freemuxlet.cpp
-        cmd_cram_gtf_util.cpp
-        cmd_cram_mux_pileup.cpp
-        cmd_cram_simuxlet.cpp
-        cmd_plp_find_mux_clust.cpp
+	cmd_cram_freemux2.cpp
         cmd_plp_make_dge_matrix.cpp
-        cmd_sc_kallisto_count.cpp
-        cmd_sc_map_stamps.cpp
-        cmd_sc_multinom_em.cpp
-        cmd_sc_multinom_gibbs.cpp
         commands.cpp
         commands.h
-        config.h
         Constant.h
         cramore.cpp
         cramore.h
@@ -78,9 +67,6 @@ add_executable(popscle
         interval_tree.h
         IO.cpp
         IO.h
-        knetfile.h
-        ksort.h
-        kstring.h
         log_tool.cpp
         log_tool.h
         louvain.h
@@ -97,9 +83,6 @@ add_executable(popscle
         sam_ordered_writer.h
         sc_drop_seq.cpp
         sc_drop_seq.h
-        sptree.cpp
-        sptree.h
-        tcf.h
         tsv_reader.cpp
         tsv_reader.h
         utils.cpp
@@ -110,7 +93,6 @@ add_executable(popscle
         variant_manip.h
         vntr.cpp
         vntr.h
-        vptree.h
         )
 
 find_library(ZLIB z HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)

@@ -19,7 +19,10 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
   int32_t minCoveredSNPs = 0;
   bool removeChrPrefix = false;
   bool addChrPrefix = false;
-  bool proteinCodingOnly = false;
+  bool createGeneTranscript = false;
+  std::vector<std::string> genetypes;
+  bool commonGenetypes = false;
+  int32_t uniqBin = 1000000000;
 
   paramList pl;
 
@@ -29,10 +32,13 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
     LONG_STRING_PARAM("gtf",&gtfFile, "GTF-formatted file for gene/transcript annotation")
     LONG_PARAM("gtf-remove-chr",&removeChrPrefix, "Remove 'chr' prefix from input GTF file")
     LONG_PARAM("gtf-add-chr"   ,&addChrPrefix,    "Add 'chr' prefix from input GTF file")
-    LONG_PARAM("protein-coding", &proteinCodingOnly, "Load only protein-coding genes, searching for phrase 'gene_type \"protein-coding\"' from GTF")
+    LONG_MULTI_STRING_PARAM("gene-type", &genetypes, "Gene types to include to produce DGE matrix (e.g. protein-coding)")
+    LONG_PARAM("common-gene-types", &commonGenetypes, "Load only common gene types, searching for specific gene types - protein_coding, lincRNA, antisense, IG_ and TR_ genes")
+    LONG_PARAM("create-gene-transcript",&createGeneTranscript, "Create genes and transcripts if not exist in GTF")
 
     LONG_PARAM_GROUP("Output Options", NULL)
     LONG_STRING_PARAM("out",&outPrefix,"Output file prefix")
+    LONG_INT_PARAM("uniq-bin",&uniqBin,"Bin size to uniquely count a UMI into a single gene")
     LONG_INT_PARAM("verbose", &globalVerbosityThreshold, "Turn on verbose mode with specific verbosity threshold. 0: fully verbose, 100 : no verbose messages")
 
     LONG_PARAM_GROUP("Cell/droplet filtering options", NULL)
@@ -83,7 +89,7 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
       error("The header line of %s.cel.gz is malformed or outdated. Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI NUM.UMIwSNP NUM.SNP", plpPrefix.c_str());
     }
     else if ( ( tsv_bcdf.nfields < 5 ) || ( tsv_bcdf.nfields > 6 ) ) {
-      error("The header line of %s.cel.gz is malformed or outdated. Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI (NUM.UMIwSNP-optional) NUM.SNP", plpPrefix.c_str());
+      error("The header line of %s.cel.gz is malformed or outdated. Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI (NUM.UMIwSNP-optional) NUM.SNP", plpPrefix.c_str());  
     }
     n_expected_toks = tsv_bcdf.nfields;
   }
@@ -126,11 +132,31 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
     ++ibcd;
   }
   notice("Finished loading %d droplets, skipping %d.", ibcd, skipbcd);
-  //tsv_bcdf.close();  
+  //tsv_bcdf.close();
+
+  if ( commonGenetypes ) {
+    genetypes.push_back("protein_coding");
+    genetypes.push_back("lincRNA");
+    genetypes.push_back("antisense");
+    genetypes.push_back("IG_LV_gene");
+    genetypes.push_back("IG_V_gene");
+    genetypes.push_back("IG_LV_pseudogene");
+    genetypes.push_back("IG_D_gene");
+    genetypes.push_back("IG_J_gene");
+    genetypes.push_back("IG_J_pseudogene");
+    genetypes.push_back("IG_C_gene");
+    genetypes.push_back("IG_C_pseudogene");
+    genetypes.push_back("TR_V_gene");
+    genetypes.push_back("TR_V_pseudogene");
+    genetypes.push_back("TR_D_gene");
+    genetypes.push_back("TR_J_gene");
+    genetypes.push_back("TR_J_pseudogene");
+    genetypes.push_back("TR_C_gene");    
+  }
 
   // read GTF file
   notice("Opening GTF file %s...", gtfFile.c_str());
-  gtf inGTF(gtfFile.c_str(), proteinCodingOnly, addChrPrefix, removeChrPrefix);
+  gtf inGTF(gtfFile.c_str(), &genetypes, addChrPrefix, removeChrPrefix, createGeneTranscript);
   notice("Finished reading GTF file %s...", gtfFile.c_str());
 
   // read the UMI information per each barcode
@@ -139,16 +165,20 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
   tsv_reader tsv_umif(fname);
   std::string chrom;
   int32_t beg1, end0;
+  bool fwdStrand;
 
   // count every possible GTF elements
   std::map<gtfElement*, std::map<int32_t,int32_t> > dgeMap;
   std::map<std::string, int64_t> typeCount;
-  
-  for (int64_t line = 1; tsv_umif.read_line() > 0; ++line) {
-    int32_t old_id = tsv_umif.int_field_at(0);
-    if ( id_cel2dge.find(old_id) == id_cel2dge.end() )
-      error("Cannot find barcode ID %s", old_id);
-    int32_t new_id = id_cel2dge[old_id];
+
+  // core routine to build DGE matrix
+  for (int64_t line = 1; tsv_umif.read_line() > 0; ++line) {  // Process each UMI separately. UMIs will typically have multiple regions
+    int32_t old_id = tsv_umif.int_field_at(0);                // old_id is the barcode id encoeded in the [prefix].umi.gz file
+    if ( id_cel2dge.find(old_id) == id_cel2dge.end() ) {
+      if ( skipbcd > 0 ) continue; // if anything was skipped, missing a specific ID is fine.
+      else error("Cannot find barcode ID %d", old_id);
+    }
+    int32_t new_id = id_cel2dge[old_id];                      // new_id is the new barcode id 
 
     if ( line % 1000000 == 0 ) {
       notice("Processing %d UMIs over %d barcodes", line, new_id);
@@ -157,13 +187,16 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
     // parse the current UMI to add to the current gene count profile
     // for processing the current UMI, genes, transcripts, and exons are only counted once each time
     std::set<gtfElement*> sElems; // store every element in GTF field for the UMI
-    for(int32_t j=3; j < tsv_umif.nfields; ++j) {
-      posLocus::parseRegion(tsv_umif.str_field_at(j), chrom, beg1, end0);
-      inGTF.findOverlappingElements(chrom.c_str(), beg1, end0, sElems);
+    //for(int32_t j=3; j < tsv_umif.nfields; ++j) {                        // UMI have multiple regions
+    for(int32_t j=4; j < tsv_umif.nfields; ++j) {                          // UMI have multiple regions      
+      //posLocus::parseRegion(tsv_umif.str_field_at(j), chrom, beg1, end0);  // For each region, identify all overlapping elements
+      //inGTF.findOverlappingElements(chrom.c_str(), beg1, end0, sElems);
+      posLocus::parseBegLenStrand(tsv_umif.str_field_at(j), chrom, beg1, end0, fwdStrand);  // For each region, identify all overlapping elements
+      inGTF.findOverlappingElements(chrom.c_str(), beg1, end0, fwdStrand, sElems);          // considering strand information
     }
 
     // focus only on exons
-    std::set<gtfElement*> umiElems;
+    std::set<gtfElement*> umiElems;             // umiElems is the unique elements
     for(std::set<gtfElement*>::iterator it = sElems.begin(); it != sElems.end(); ++it) {
       if ( (*it)->type == "exon" ) {
 	umiElems.insert(*it);                   // insert the exon
@@ -172,9 +205,30 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
       }
     }
 
+    std::map<std::string,gtfElement*> locusUsed;
+    char buf[65536];
     for(std::set<gtfElement*>::iterator it = umiElems.begin(); it != umiElems.end(); ++it) {
-      ++(dgeMap[*it][new_id]);
-      ++typeCount[(*it)->type];
+      if ( (*it)->type == "gene" ) { // make uniq-gene matrix (to prevent gene double counting)
+	gtfGene* gg = (gtfGene*)(*it);
+	sprintf(buf, "%s:%d", gg->seqname.c_str(), (gg->locus.beg1 + gg->locus.end0) / (uniqBin / 2));
+	std::map<std::string,gtfElement*>::iterator it2 = locusUsed.find(buf);
+	if ( it2 == locusUsed.end() ) { // if the locus was not used
+	  ++(dgeMap[*it][new_id]);
+	  ++typeCount[(*it)->type];
+	  locusUsed[buf] = *it;
+	}
+	else {   // resolve ties based on gene names
+	  if ( gg->geneId < ((gtfGene*)it2->second)->geneId ) { // replace to the gene with lexicographically smaller one
+	    --(dgeMap[it2->second][new_id]);
+	    ++(dgeMap[*it][new_id]);
+	    locusUsed[buf] = *it;	    
+	  }
+	}
+      }
+      else {                        // transcript and exons are still double-counted
+	++(dgeMap[*it][new_id]);
+	++typeCount[(*it)->type];
+      }
     }
   }
 
@@ -213,14 +267,14 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
     if ( it->first == "gene" ) {
       for(int32_t i=0; i < (int32_t)vElems.size(); ++i) {
 	gtfGene* g = (gtfGene*)vElems[i];
-	hprintf(wgene,"%s %s\n", g->geneId.c_str(), g->geneName.c_str());
+	hprintf(wgene,"%s\t%s\n", g->geneId.c_str(), g->geneName.c_str());
       }
     }
     else if ( it->first == "transcript" ) {
       for(int32_t i=0; i < (int32_t)vElems.size(); ++i) {
 	gtfTranscript* t = (gtfTranscript*)vElems[i];
 	gtfGene*       g = (gtfGene*)t->parent;
-	hprintf(wgene,"%s %s:%s\n", t->transcriptId.c_str(), g->geneName.c_str(), t->transcriptId.c_str());
+	hprintf(wgene,"%s\t%s:%s\n", t->transcriptId.c_str(), g->geneName.c_str(), t->transcriptId.c_str());
       }      
     }
     else {
@@ -228,7 +282,7 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
 	gtfElement* e = vElems[i];
 	gtfTranscript* t = (gtfTranscript*)e->parent;
 	gtfGene*       g = (gtfGene*)t->parent;
-	hprintf(wgene,"%s:%s:%d-%d %s:%s:%s:%d-%d\n", t->transcriptId.c_str(), g->seqname.c_str(), e->locus.beg1, e->locus.end0, g->geneName.c_str(), t->transcriptId.c_str(), g->seqname.c_str(), e->locus.beg1, e->locus.end0);
+	hprintf(wgene,"%s:%s:%d-%d\t%s:%s:%s:%d-%d\n", t->transcriptId.c_str(), g->seqname.c_str(), e->locus.beg1, e->locus.end0, g->geneName.c_str(), t->transcriptId.c_str(), g->seqname.c_str(), e->locus.beg1, e->locus.end0);
       }
     }
     hts_close(wgene);
@@ -258,7 +312,7 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
     int32_t igene = mapElems[e->type][e] + 1;
     htsFile* hf = mtxFiles[e->type];
     for(std::map<int32_t,int32_t>::iterator jt = it->second.begin(); jt != it->second.end(); ++jt) {
-												    hprintf(hf, "%d %d %d\n", igene, jt->first + 1, jt->second);
+      hprintf(hf, "%d %d %d\n", igene, jt->first + 1, jt->second);
     }
     ++nelems;
   }

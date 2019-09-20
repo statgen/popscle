@@ -90,6 +90,15 @@ bool sc_dropseq_lib_t::add_read(int32_t snpid, int32_t cellid, const char* umi, 
   return ret;
 }
 
+int32_t sc_dropseq_lib_t::load_valid_barcodes(const char* bcdFile) {
+  tsv_reader tsv_bcdf(bcdFile);
+  while( tsv_bcdf.read_line() > 0 ) {
+    valid_bcs.insert(tsv_bcdf.str_field_at(0));
+  }
+  tsv_bcdf.close();  
+  notice("Loaded %u valid barcodes from %s", valid_bcs.size(), bcdFile);
+  return (int32_t)valid_bcs.size();
+}
 
 int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader* pvr, const char* field, double genoErrorOffset, double genoErrorCoeffR2, const char* r2info, bool loadUMI) {
   if ( loadUMI == true )
@@ -107,8 +116,8 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
     nv = pvr->get_nsamples();    
   }
 
-  verbose(70, "Loading pileup information with prefix %s", plpPrefix);
-  verbose(50, "Reading barcode information from %s.cel.gz..", plpPrefix);  
+  notice("Loading pileup information with prefix %s", plpPrefix);
+  notice("Reading barcode information from %s.cel.gz..", plpPrefix);  
   char fname[65535];
 
   // reading the droplet information first..
@@ -120,9 +129,9 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
   std::vector<int32_t> tmp_cell_uniq_reads;
   std::vector<int32_t> tmp_cell_num_snps;    
 
-  int32_t n_expected_toks = 6;
+  //int32_t n_expected_toks = 6;
   if ( tsv_bcdf.read_line() > 0 ) {
-    if ( ( tsv_bcdf.nfields == 5 ) &&   // for backward compatibility
+    /*if ( ( tsv_bcdf.nfields == 5 ) &&   // for backward compatibility
 	 ( ( strcmp("#DROPLET_ID",tsv_bcdf.str_field_at(0)) != 0 ) ||
 	   ( strcmp("BARCODE",tsv_bcdf.str_field_at(1)) != 0 ) ||
 	   ( strcmp("NUM.READ",tsv_bcdf.str_field_at(2)) != 0 ) ||
@@ -130,7 +139,8 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
 	   ( strcmp("NUM.SNP",tsv_bcdf.str_field_at(4)) != 0 ) ) ) {
       error("The header line of %s.cel.gz is malformed or outdated. Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI NUM.SNP", plpPrefix);
     }
-    else if ( ( tsv_bcdf.nfields == 6 ) &&
+    else*/
+    if ( ( tsv_bcdf.nfields != 6 ) ||
 	 ( ( strcmp("#DROPLET_ID",tsv_bcdf.str_field_at(0)) != 0 ) ||
 	   ( strcmp("BARCODE",tsv_bcdf.str_field_at(1)) != 0 ) ||
 	   ( strcmp("NUM.READ",tsv_bcdf.str_field_at(2)) != 0 ) ||
@@ -139,17 +149,45 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
 	   ( strcmp("NUM.SNP",tsv_bcdf.str_field_at(5)) != 0 ) ) ) {
       error("The header line of %s.cel.gz is malformed or outdated. Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI NUM.UMIwSNP NUM.SNP", plpPrefix);
     }
-    else if ( ( tsv_bcdf.nfields < 5 ) || ( tsv_bcdf.nfields > 6 ) ) {
-      error("The header line of %s.cel.gz is malformed or outdated. Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI (NUM.UMIwSNP-optional) NUM.SNP", plpPrefix);  
-    }
-    n_expected_toks = tsv_bcdf.nfields;
+    //else if ( ( tsv_bcdf.nfields < 5 ) || ( tsv_bcdf.nfields > 6 ) ) {
+    //else if ( tsv_bcdf.nfields != 6 ) {
+    //  error("The header line of %s.cel.gz is malformed or outdated. Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI NUM.UMIwSNP NUM.SNP", plpPrefix);
+      //Expecting #DROPLET_ID BARCODE NUM.READ NUM.UMI (NUM.UMIwSNP-optional) NUM.SNP", plpPrefix);  
+    //}
+    //'n_expected_toks = tsv_bcdf.nfields;
   }
   else error("Cannot read the first line of %s.cel.gz", plpPrefix);
 
+  int32_t nskip = 0;
   while( tsv_bcdf.read_line() > 0 ) {
+    // apply filter
+    if ( !valid_bcs.empty() ) { // if valid_bcs are not empty, the barcode must present in the set
+      if ( valid_bcs.find(tsv_bcdf.str_field_at(1)) == valid_bcs.end() )  {
+	++nskip;
+	index_bcs.push_back(-1);	
+	continue;
+      }
+    }
+    int32_t n_reads = tsv_bcdf.int_field_at(2);
+    int32_t n_umis  = tsv_bcdf.int_field_at(3);
+    int32_t n_umi_w_snps = tsv_bcdf.int_field_at(4);
+    int32_t n_snps  = tsv_bcdf.int_field_at(5);
+
+    if ( ( n_reads < minRead ) || ( n_umis < minUMI ) || ( n_snps < minSNP ) ) {
+      index_bcs.push_back(-1);
+      ++nskip;
+      continue;
+    }
+    
     int32_t new_id = add_cell(tsv_bcdf.str_field_at(1));
-    if ( new_id != tsv_bcdf.int_field_at(0) )
+    index_bcs.push_back(new_id); // ID will be positive only if valid bcds
+    if ( new_id + nskip != tsv_bcdf.int_field_at(0) )
       error("[E:%s] Observed DROPLET_ID %d is different from expected DROPLET_ID. Did you modify the digital pileup files by yourself?", __PRETTY_FUNCTION__, tsv_bcdf.int_field_at(0), new_id);
+    tmp_cell_totl_reads.push_back(n_reads);
+    tmp_cell_totl_umis.push_back(n_umis);  // could be zero. no sanity check on this.      
+    tmp_cell_uniq_reads.push_back(n_umi_w_snps);
+    tmp_cell_num_snps.push_back(n_snps);          
+    /*
     tmp_cell_totl_reads.push_back(tsv_bcdf.int_field_at(2));
     if ( n_expected_toks == 5 ) {
       tmp_cell_uniq_reads.push_back(tsv_bcdf.int_field_at(3));
@@ -159,12 +197,13 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
       tmp_cell_totl_umis.push_back(tsv_bcdf.int_field_at(3));  // could be zero. no sanity check on this.      
       tmp_cell_uniq_reads.push_back(tsv_bcdf.int_field_at(4));
       tmp_cell_num_snps.push_back(tsv_bcdf.int_field_at(5));      
-    }
+      }*/
   }
-  verbose(50, "Finished loading %d droplets..", nbcs);
+  tsv_bcdf.close();
+  notice("Finished loading %d droplets, skipping %d", nbcs, nskip);
 
   // reading the variant information next..
-  verbose(50, "Reading variant information from %s.var.gz..", plpPrefix);  
+  notice("Reading variant information from %s.var.gz..", plpPrefix);  
   sprintf(fname, "%s.var.gz", plpPrefix);
   tsv_reader tsv_varf(fname);  
   if ( tsv_varf.read_line() > 0 ) {
@@ -206,7 +245,7 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
       bcf1_t* v = pvr->cursor(); // read it and have not iterated over yet
 
       if ( rand() % 10000 == 0 )
-	verbose(50, "Reading variant info %s:%d:%c:%c at %s:%d:%c:%c", tsv_varf.str_field_at(0), pos, ref, alt, bcf_hdr_id2name(pvr->cdr.hdr, v->rid), v->pos+1, v->d.allele[0][0], v->d.allele[1][0] );
+	notice("Reading variant info %s:%d:%c:%c at %s:%d:%c:%c", tsv_varf.str_field_at(0), pos, ref, alt, bcf_hdr_id2name(pvr->cdr.hdr, v->rid), v->pos+1, v->d.allele[0][0], v->d.allele[1][0] );
       
       // we need to
       // 1. If the position exactly matches
@@ -286,12 +325,14 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
       }
     }
   }
-  verbose(50, "Finished loading %d variants..", nsnps);
+  notice("Finished loading %d variants..", nsnps);
 
-  free(r2flts);  
+  tsv_varf.close();  
+
+  //if ( r2flts != NULL ) free(r2flts);  
 
   // reading pileup information finally...
-  verbose(50, "Reading pileup information from %s.plp.gz..", plpPrefix);  
+  notice("Reading pileup information from %s.plp.gz..", plpPrefix);  
   sprintf(fname, "%s.plp.gz", plpPrefix);
   tsv_reader tsv_plpf(fname);
   if ( tsv_plpf.read_line() > 0 ) {
@@ -307,6 +348,9 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
   int32_t numi = 0;
   char buf[255];
   while( tsv_plpf.read_line() > 0 ) {
+    int32_t ibc = index_bcs[tsv_plpf.int_field_at(0)];
+    if ( ibc < 0 ) continue; // skip invalid droplet ID
+    
     const char* pa = tsv_plpf.str_field_at(2);
     const char* pq = tsv_plpf.str_field_at(3);
     int32_t l = (int32_t)strlen(pq);
@@ -315,12 +359,17 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
       error("Length are different between %s and %s", pa, pq);
     
     for(int32_t i=0; i < l; ++i) {
-      sprintf(buf, "%x", numi++);
-      ++cell_totl_reads[tsv_plpf.int_field_at(0)];    	
-      add_read( tsv_plpf.int_field_at(1), tsv_plpf.int_field_at(0), buf, (char)(pa[i]-(char)'0'), (char)(pq[i]-(char)33) ); 
+      char bq = (char)(pq[i]-(char)33);
+      if ( bq >= minBQ ) {
+	if ( bq > capBQ ) bq = capBQ;
+	sprintf(buf, "%x", numi++);
+	++cell_totl_reads[ibc];      
+	add_read( tsv_plpf.int_field_at(1), ibc, buf, (char)(pa[i]-(char)'0'), bq );
+      }
     }
   }
-  verbose(50, "Finished loading %d UMIs in total..", numi);
+  tsv_plpf.close();     
+  notice("Finished loading %d UMIs in total..", numi);
 
   // sanity check on the observed counts
   for(int32_t i=0; i < nbcs; ++i) {
@@ -329,6 +378,7 @@ int32_t sc_dropseq_lib_t::load_from_plp(const char* plpPrefix, BCFFilteredReader
       cell_totl_reads[i] = tmp_cell_totl_reads[i]; // overwrite
     }
   }
+ 
 
   return numi;
 }
@@ -343,7 +393,7 @@ double calculate_snp_droplet_doublet_GL(sc_snp_droplet_t* ssd, double* gls, doub
     uint8_t al = ( it->second >> 24 ) & 0x00ff;
     uint8_t bq = ( it->second >> 16 ) & 0x00ff;
 
-    if ( al == 2 ) continue;
+    if ( al > 2 ) continue;
 
     // 0 : REF / REF -- 1        0
     // 1 : REF / HET -- 1-a/2    a/2
@@ -466,7 +516,7 @@ double calculate_snp_droplet_GL(sc_snp_droplet_t* ssd, double* gls) {
     uint8_t al = ( it->second >> 24 ) & 0x00ff;
     uint8_t bq = ( it->second >> 16 ) & 0x00ff;
 
-    if ( al == 2 ) continue;
+    if ( al > 1 ) continue;    
 
     gls[0] *= ((al==0) ? phredConv.phred2Mat[bq] : phredConv.phred2Err[bq]/3.0);
     gls[1] *= (0.5 - phredConv.phred2Err[bq]/3.0);
@@ -489,4 +539,40 @@ double calculate_snp_droplet_GL(sc_snp_droplet_t* ssd, double* gls) {
 
   return logdenom;
   //return 0;
+}
+
+dropD sc_dropseq_lib_t::calculate_droplet_clust_distance(std::map<int32_t,snp_droplet_pileup*> dropletPileup,
+							 std::map<int32_t,snp_droplet_pileup>& clustPileup) {
+  std::map<int32_t,snp_droplet_pileup*>::const_iterator it;
+  std::map<int32_t,snp_droplet_pileup>::const_iterator jt;
+  dropD dd;
+  
+  for(it = dropletPileup.begin(); it != dropletPileup.end(); ++it) {
+    jt = clustPileup.find(it->first);
+    if ( jt != clustPileup.end() ) {
+      double af = snps[it->first].af;
+      double lk0 = 0, lk2 = 0;
+      double gps[3];
+      gps[0] = (1.0-af) * (1.0-af);
+      gps[1] = 2.0 * af * (1.0-af);
+      gps[2] = af * af;
+
+      const double* glis = it->second->gls;
+      const double* gljs = jt->second.gls;
+
+      for(int32_t gi=0; gi < 3; ++gi) {
+	lk2 += ( glis[gi*3+gi] * gljs[gi*3+gi] * gps[gi] );
+	for(int32_t gj=0; gj < 3; ++gj) {
+	  lk0 += ( glis[gi*3+gi] * gljs[gj*3+gj] * gps[gi] * gps[gj] );
+	}
+      }
+      ++dd.nsnps;
+      dd.nread1 += it->second->nreads;
+      dd.nread2 += jt->second.nreads;
+      dd.llk2 += log(lk2);
+      dd.llk0 += log(lk0);
+    }
+  }
+
+  return dd;
 }

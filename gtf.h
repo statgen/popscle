@@ -119,6 +119,22 @@ class posLocus {
     }
     return true;
   }
+
+  // parse a string in [chr]:[beg1]-[end0] format 
+  static bool parseBegLenStrand(const char* region, std::string& chrom, int32_t& beg1, int32_t& end0, bool& fwdStrand) {
+    char buf[255];
+    strcpy(buf,region);
+    const char* pcolon1 = strchr(region,':');
+    const char* pcolon2 = strchr(pcolon1+1,':');
+    const char* pcolon3 = strchr(pcolon2+1,':');    
+    if ( pcolon1 == NULL )
+      error("Cannot parse %s in genomeLocus::genomeLocus()");
+    chrom.assign(region,0,pcolon1-region);
+    beg1 = atoi(pcolon1+1);
+    end0 = beg1 + atoi(pcolon2+1) - 1;
+    fwdStrand = ((pcolon3 != NULL) && (pcolon3[1] == '-')) ? false : true;
+    return true;
+  }  
 };
 
 class gtfGene;
@@ -137,9 +153,55 @@ public:
   //virtual void printElement();
 };
 
+class gtfEntryParser {
+public:
+  std::map<std::string,std::string> dict;
+  std::string empty;
+  
+  std::string get(const char* key) {
+    std::map<std::string,std::string>::iterator it = dict.find(key);
+    if ( it != dict.end() ) { return it->second; }
+    else { return empty; }
+  }
+  
+  gtfEntryParser(const char* s) {
+    const char* p = s;  // cursor
+    const char* c = p;  // beginning of item
+    char delim = ';';
+    char space = ' ';
+    std::string key, val;
+    while( *p != '\0' ) {
+      if ( *p == delim ) { // delimiter found
+	// c to p-1 is a valid string
+	int32_t n = p - c;
+	if ( ( c[0] == '"' ) && ( c[n-1] == '"' ) ) {
+	  val.assign(c+1,n-2); // take n-2 characters
+	}
+	else {  // if no quotes
+	  val.assign(c,n);
+	}
+	dict[key] = val; // fill in the dict
+	c = p+1; // set the start of next item
+	while ( ( *c != '\0' ) && ( *c == space ) ) ++c; // consume whitespaces
+	p = c;
+      }
+      else if ( *p == space ) {
+	// c to p-1 is a valid string
+	int32_t n = p - c;
+	key.assign(c, n);
+	c = p+1; // set the start of next item
+	while ( ( *c != '\0' ) && ( *c == space ) ) ++c; // consume whitespaces
+	p = c; // update p	
+      }
+      else {
+	++p;  // advance
+      }
+    }
+  }
+};
+
 struct gtfComp {
-    template<typename T>
-  bool operator()(const T* lhs, const T* rhs) const {
+  bool operator()(const gtfElement* lhs, const gtfElement* rhs) const {
     if ( lhs->locus == rhs->locus ) {
       return ((int64_t)rhs - (int64_t)lhs > 0);
     }
@@ -188,7 +250,7 @@ public:
 class gtf {
 // transcript : gene
 public:
-  gtf(const char* gtfFile, bool proteinCodingOnly = false, bool addChrPrefix = false, bool removeChrPrefix = false);
+  gtf(const char* gtfFile, std::vector<std::string>* pGenetypes = NULL, bool addChrPrefix = false, bool removeChrPrefix = false, bool createGeneTranscript = false);
   ~gtf();
 
   int32_t maxGeneLength;
@@ -251,6 +313,7 @@ public:
   bool checkTranscriptSanity(std::string& tid, const char* seqname, const char* strand);
 
   int32_t findOverlappingElements(const char* seqname, int32_t start, int32_t end, std::set<gtfElement*>& results);
+  int32_t findOverlappingElements(const char* seqname, int32_t start, int32_t end, bool fwdStrand, std::set<gtfElement*>& results);  
 };
 
 #endif
