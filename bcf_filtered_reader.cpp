@@ -493,7 +493,7 @@ std::string& BCFFilteredReader::get_var_ID(bcf_hdr_t* hdr, bcf1_t* v) {
   varID.assign(bcf_get_chrom(cdr.hdr,v));
   varID += ":";
   char buf[256];
-  sprintf(buf,"%d",v->pos);
+  sprintf(buf,"%lld",v->pos);
   varID += buf;
   for(int32_t i=0; i < v->n_allele; ++i) {
     varID += (i == 0 ? ":" : "_");
