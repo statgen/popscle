@@ -29,7 +29,7 @@ You need to run `dsc-pileup` before running `demuxlet` and `freemuxlet`. `dsc-pi
 1. Pileup files (CEL,VAR and PLP) produced by `dsc-pileup`.
 2. a VCF/BCF file containing the genotype (GT), posterior probability (GP), or genotype likelihood (GL) to assign each barcode to a specific sample (or a pair of samples) in the VCF file.
 
-Alternatively, `dsc-pileup` could also directly take SAM file without running `dsc-pileup`. In this case, `dsc-pileup` would require the following files:
+Alternatively, `demuxlet` could also directly take SAM file without running `dsc-pileup`. In this case, `demuxlet` would require the following files:
 
 1. a SAM/BAM/CRAM file produced by the standard 10x sequencing platform, or any other barcoded single cell RNA-seq (with proper `--tag-UMI` and `--tag-group`) options.
 2. a VCF/BCF file containing the genotype (GT), posterior probability (GP), or genotype likelihood (GL) to assign each barcode to a specific sample (or a pair of samples) in the VCF file.
