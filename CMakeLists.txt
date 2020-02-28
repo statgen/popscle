@@ -3,7 +3,7 @@ project(popscle VERSION 1.1.0)
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 11)
 
 if (USE_CXX3_ABI)
     add_definitions("-D_GLIBCXX_USE_CXX11_ABI=0")
