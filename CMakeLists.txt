@@ -94,6 +94,7 @@ add_executable(popscle
         )
 
 target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
 install(TARGETS popscle COMPONENT cli
         RUNTIME DESTINATION bin
