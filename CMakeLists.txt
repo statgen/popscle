@@ -95,11 +95,6 @@ add_executable(popscle
 
 target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} `${CMAKE_THREAD_LIBS_INIT})
 
-install(DIRECTORY COMPONENT api DESTINATION include)
-install(TARGETS popscle COMPONENT api EXPORT ${PROJECT_NAME}-config
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
 install(TARGETS popscle COMPONENT cli
         RUNTIME DESTINATION bin
         OPTIONAL)
