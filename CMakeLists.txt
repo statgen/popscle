@@ -1,26 +1,24 @@
-cmake_minimum_required(VERSION 2.8.4)
-project(popscle)
+cmake_minimum_required(VERSION 3.2)
+project(popscle VERSION 1.1.0)
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -pthread")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 
-
-find_path(HTS_INCLUDE_DIRS htslib/bgzf.h HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
-if(NOT HTS_INCLUDE_DIRS )
-    message(FATAL_ERROR "libhts HTS_INCLUDE_DIRS not found")
+if (USE_CXX3_ABI)
+    add_definitions("-D_GLIBCXX_USE_CXX11_ABI=0")
 endif()
 
-message(STATUS ${HTS_INCLUDE_DIRS})
-
-find_library(HTS_LIBRARIES hts HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
-if(NOT HTS_LIBRARIES)
-    message(FATAL_ERROR "libhts HTS_LIBRARIES not found")
+if(CGET_PREFIX)
+    link_directories(${CGET_PREFIX}/lib)
 endif()
 
-message(STATUS ${HTS_LIBRARIES})
 
-include_directories(${HTS_INCLUDE_DIRS})
+set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;${CMAKE_FIND_LIBRARY_SUFFIXES}") # Prefer libz.a when both are available
+
+find_library(HTS_LIBRARY hts)
+find_library(ZLIB_LIBRARY z)
+find_package(Threads)
 
 add_executable(popscle
         allele.cpp
@@ -95,35 +93,24 @@ add_executable(popscle
         vntr.h
         )
 
-find_library(ZLIB z HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
-if(NOT ZLIB)
-    message(FATAL_ERROR "libz library not found")
-endif()
+target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} `${CMAKE_THREAD_LIBS_INIT})
 
-find_library(CURLLIB curl HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
-if(NOT CURLLIB)
-    message(FATAL_ERROR "libcurl library not found")
-endif()
+install(DIRECTORY COMPONENT api DESTINATION include)
+install(TARGETS popscle COMPONENT api EXPORT ${PROJECT_NAME}-config
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-find_package (BZip2)
-if (NOT BZIP2_FOUND)
-    message(FATAL_ERROR "libbz2 library not found")
-else()
-    include_directories(${BZIP2_INCLUDE_DIRS})
-    set(BZIP2 ${BZIP2_LIBRARIES})
-endif()
+install(TARGETS popscle COMPONENT cli
+        RUNTIME DESTINATION bin
+        OPTIONAL)
 
-find_library(LZMA lzma HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
-if(NOT LZMA)
-    message(WARNING "liblzma library not found, if you specified --disable-lzma when compiling libhts, please ignore this warning")
-    set(LZMA "")
-else()
-    set(LZMA ${LZMA_LIBRARIES})
-endif()
+install(EXPORT ${PROJECT_NAME}-config COMPONENT api DESTINATION share/${PROJECT_NAME})
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake COMPATIBILITY SameMajorVersion)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake COMPONENT api DESTINATION share/${PROJECT_NAME})
 
-find_library(CRYPTOLIB crypto HINTS /usr/lib/x86_64-linux-gnu/ /usr/lib/ /usr/lib64/)
-if(NOT CRYPTOLIB)
-    message(FATAL_ERROR "libcrypto library not found")
-endif()
+export(EXPORT ${PROJECT_NAME}-config)
 
-target_link_libraries(popscle ${HTS_LIBRARIES} ${ZLIB} ${BZIP2} ${LZMA} ${CURLLIB} ${CRYPTOLIB})
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+include(CPack)
