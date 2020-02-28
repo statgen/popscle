@@ -93,7 +93,7 @@ add_executable(popscle
         vntr.h
         )
 
-target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} `${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS popscle COMPONENT cli
         RUNTIME DESTINATION bin
