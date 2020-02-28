@@ -22,9 +22,9 @@ find_package(Threads)
 
 add_definitions(-DPOPSCLE_VERSION="${PROJECT_VERSION}")
 
-add_library(popscle)
+add_library(libpopscle)
 
-target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(libpopscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
 add_executable(popscle
@@ -100,9 +100,9 @@ add_executable(popscle
         vntr.h
         )
 
-target_link_libraries(popscle popscle)
+target_link_libraries(popscle libpopscle)
 
-install(TARGETS popscle COMPONENT api EXPORT ${PROJECT_NAME}-config
+install(TARGETS libpopscle COMPONENT api EXPORT ${PROJECT_NAME}-config
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
