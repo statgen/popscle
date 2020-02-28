@@ -20,6 +20,13 @@ find_library(HTS_LIBRARY hts)
 find_library(ZLIB_LIBRARY z)
 find_package(Threads)
 
+add_definitions(-DPOPSCLE_VERSION="${PROJECT_VERSION}")
+
+add_library(popscle)
+
+target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+
 add_executable(popscle
         allele.cpp
         allele.h
@@ -93,8 +100,7 @@ add_executable(popscle
         vntr.h
         )
 
-target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
-target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+target_link_libraries(popscle popscle)
 
 install(TARGETS popscle COMPONENT cli
         RUNTIME DESTINATION bin
