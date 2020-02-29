@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(popscle VERSION 1.1.0)
-
 set(CMAKE_CXX_STANDARD 11)
+
+project(popscle VERSION 1.1.0)
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;${CMAKE_FIND_LIBRARY_SUFFIXES}") # Prefer libz.a when both are available
 
@@ -88,4 +88,6 @@ target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOUR
 
 target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
-install(TARGETS popscle DESTINATION bin)
+install(TARGETS popscle COMPONENT cli
+        RUNTIME DESTINATION bin
+        OPTIONAL)
