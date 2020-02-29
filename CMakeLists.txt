@@ -1,31 +1,25 @@
 cmake_minimum_required(VERSION 3.2)
+
 project(popscle VERSION 1.1.0)
-include(CMakePackageConfigHelpers)
-include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 11)
 
-if (USE_CXX3_ABI)
-    add_definitions("-D_GLIBCXX_USE_CXX11_ABI=0")
-endif()
+#if (USE_CXX3_ABI)
+#    add_definitions("-D_GLIBCXX_USE_CXX11_ABI=0")
+#endif()
 
-if(CGET_PREFIX)
-    link_directories(${CGET_PREFIX}/lib)
-endif()
-
+#if(CGET_PREFIX)
+#    link_directories(${CGET_PREFIX}/lib)
+#endif()
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;${CMAKE_FIND_LIBRARY_SUFFIXES}") # Prefer libz.a when both are available
 
+find_package(ZLIB REQUIRED)
 find_library(HTS_LIBRARY hts)
 find_library(ZLIB_LIBRARY z)
 find_package(Threads)
 
-add_definitions(-DPOPSCLE_VERSION="${PROJECT_VERSION}")
-
-add_library(libpopscle)
-
-target_link_libraries(libpopscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
-target_include_directories(libpopscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+#add_definitions(-DPOPSCLE_VERSION="${PROJECT_VERSION}")
 
 add_executable(popscle
         allele.cpp
@@ -100,23 +94,23 @@ add_executable(popscle
         vntr.h
         )
 
-target_link_libraries(popscle libpopscle)
+target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
-install(TARGETS libpopscle COMPONENT api EXPORT ${PROJECT_NAME}-config
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
 
-install(TARGETS popscle COMPONENT cli
-        RUNTIME DESTINATION bin
-        OPTIONAL)
+install(TARGETS popscle DESTINATION bin)
+	
+#install(TARGETS popscle COMPONENT cli
+#        RUNTIME DESTINATION bin
+#        OPTIONAL)
 
-install(EXPORT ${PROJECT_NAME}-config COMPONENT api DESTINATION share/${PROJECT_NAME})
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake COMPATIBILITY SameMajorVersion)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake COMPONENT api DESTINATION share/${PROJECT_NAME})
+#install(EXPORT ${PROJECT_NAME}-config COMPONENT api DESTINATION share/${PROJECT_NAME})
+#write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake COMPATIBILITY SameMajorVersion)
+#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake COMPONENT api DESTINATION share/${PROJECT_NAME})
 
-export(EXPORT ${PROJECT_NAME}-config)
+#export(EXPORT ${PROJECT_NAME}-config)
 
-set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
-include(CPack)
+#set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+#set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+#set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+#include(CPack)
