@@ -6,9 +6,8 @@ project(popscle VERSION 1.1.0)
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;${CMAKE_FIND_LIBRARY_SUFFIXES}") # Prefer libz.a when both are available
 
-find_package(ZLIB REQUIRED)
-find_library(HTS_LIBRARY hts)
-find_library(ZLIB_LIBRARY z)
+find_library(HTS_LIB hts)
+find_library(Z_LIB z)
 find_package(Threads)
 
 add_executable(popscle
@@ -84,10 +83,8 @@ add_executable(popscle
         vntr.h
         )
 
-target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
+#target_include_directories(popscle PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(popscle ${HTS_LIBRARY} ${ZLIB_LIBRARY} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(popscle ${HTS_LIB} ${Z_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
-install(TARGETS popscle COMPONENT cli
-        RUNTIME DESTINATION bin
-        OPTIONAL)
+install(TARGETS popscle RUNTIME DESTINATION bin)
