@@ -127,3 +127,5 @@ if(NOT CRYPTOLIB)
 endif()
 
 target_link_libraries(popscle ${HTS_LIBRARIES} ${ZLIB} ${BZIP2} ${LZMA} ${CURLLIB} ${CRYPTOLIB})
+
+install(TARGETS popscle RUNTIME DESTINATION bin)
