@@ -35,12 +35,16 @@
 #include <list>
 #include <string>
 #include <iostream>
-#include "htslib/faidx.h"
-#include "htslib/kstring.h"
-#include "htslib/vcf.h"
 #include "hts_utils.h"
 #include "variant.h"
 #include "allele.h"
+
+extern "C" {
+#include "htslib/faidx.h"
+#include "htslib/kstring.h"
+#include "htslib/vcf.h"
+}
+
 
 /**
  * Methods for manipulating variants

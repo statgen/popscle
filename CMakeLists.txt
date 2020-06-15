@@ -51,6 +51,7 @@ add_executable(popscle
         Error.h
         filter.cpp
         filter.h
+	bcftools.h
         genome_interval.cpp
         genome_interval.h
         genomeChunk.cpp

@@ -141,7 +141,7 @@ bool BAMOrderedReader::jump_to_interval(GenomeInterval& interval)
  */
 bool BAMOrderedReader::initialize_next_interval()
 {
-    while (interval_index!=intervals.size())
+    if (interval_index!=intervals.size())
     {
         intervals[interval_index++].to_string(&str);
         itr = sam_itr_querys(idx, hdr, str.s);
@@ -150,6 +150,9 @@ bool BAMOrderedReader::initialize_next_interval()
         {
             return true;
         }
+        
+        fprintf(stderr, "[%s:%d %s] Failed to load interval %s from file: %s\n", __FILE__, __LINE__, __FUNCTION__, str.s, file_name.c_str());
+        exit(1);
     }
 
     return false;
@@ -159,14 +162,20 @@ bool BAMOrderedReader::initialize_next_interval()
  * Reads next record, hides the random access of different regions from the user.
  */
 bool BAMOrderedReader::read(bam1_t *s)
-{
+{  
+    int res = 0;
     if (random_access_enabled)
     {
         while(true)
         {
-            if (itr && sam_itr_next(file, itr, s)>=0)
+            if (itr && (res = sam_itr_next(file, itr, s))>=0)
             {
                 return true;
+            }
+            else if (res < -1)
+            {
+                fprintf(stderr, "[%s:%d %s] Error while reading %s\n", __FILE__, __LINE__, __FUNCTION__, file_name.c_str());
+                exit(1);
             }
             else if (!initialize_next_interval())
             {
@@ -176,12 +185,17 @@ bool BAMOrderedReader::read(bam1_t *s)
     }
     else
     {
-        if (sam_read1(file, hdr, s)>=0)
+        if ((res = sam_read1(file, hdr, s))>=0)
         {
             return true;
         }
         else
         {
+            if (res < -1)
+            {
+                fprintf(stderr, "[%s:%d %s] Error while reading %s\n", __FILE__, __LINE__, __FUNCTION__, file_name.c_str());
+                exit(1);
+            }
             return false;
         }
     }

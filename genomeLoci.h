@@ -41,6 +41,7 @@ class genomeLocus {
       end0 = atoi(pminus+1);
       if ( end0 == 0 ) end0 = INT_MAX;
     }
+    //notice("%s %s %d %d", region, chrom.c_str(), beg1, end0);
   }
 
   const char* toString() const { 
@@ -200,6 +201,7 @@ class genomeLoci {
     int32_t i;
     // model list is assumed to have [INFO_KEY] [MODEL_FILE] [INFO_DESCRIPTION = INFO_KEY if empty]
     for( i=0; ( lstr = hts_getline(fp, KS_SEP_LINE, &str) ) >= 0; ++i ) {
+      if ( fields != NULL ) { free(fields); fields = NULL; } // free the fields once allocated
       fields = ksplit(&str, 0, &nfields);
       if ( nfields < 3 )
 	error("[E:%s:%d %s] Less than three columns observed in line %d of %s",__FILE__,__LINE__,__FUNCTION__, i+1, file);      
@@ -228,7 +230,9 @@ class genomeLoci {
     std::pair<std::set<genomeLocus>::iterator, bool> ret = loci.insert(genomeLocus(chr,beg1,end0));
     it = ret.first;
     if ( ret.second )
-      chroms.insert(ret.first->chrom);    
+      chroms.insert(ret.first->chrom);
+
+    //notice("bar %s", loci.begin()->toString());
     return ret.second;
   }
 
@@ -241,6 +245,9 @@ class genomeLoci {
     it = ret.first;
     int32_t l = ret.first->end0 - ret.first->beg1 + 1;
     if ( l > maxLength ) maxLength = l;
+
+    //notice("bar %s", loci.begin()->toString());
+    
     return ret.second;
   }
 

@@ -22,8 +22,11 @@
 */
 
 #include "hts_utils.h"
+extern "C" {
 #include "htslib/hfile.h"
+}
 #include "Error.h"
+#include <cassert>
 
 /********
  *General
@@ -31,6 +34,15 @@
 
 KHASH_MAP_INIT_STR(vdict, bcf_idinfo_t)
 typedef khash_t(vdict) vdict_t;
+
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
+//  int ks_resize2(kstring_t*, unsigned long);
+//#ifdef __cplusplus
+//}
+//#endif
+
 
 /**********
  *FAI UTILS

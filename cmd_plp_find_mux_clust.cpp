@@ -568,7 +568,7 @@ int32_t cmdPlpFindMuxClust(int32_t argc, char** argv) {
     for(int32_t i=0; i < scl.nbcs; ++i) {
       if ( dblBestLLKs[i] > sngBestLLKs[i] + 2 ) { // best call is doublet
 	types[i] = 1; // doublet
-	bestPPs[i] = exp( dblBestLLKs[i] + log_double_prior - sumLLKs[i] );
+	bestPPs[i] = ( dblBestLLKs[i] + log_double_prior - sumLLKs[i] );
 	jBests[i] = dBest1s[i];
 	kBests[i] = dBest2s[i];
 	bestLLKs[i] = dblBestLLKs[i];
@@ -587,7 +587,7 @@ int32_t cmdPlpFindMuxClust(int32_t argc, char** argv) {
 	types[i] = 0; // singlet
 	++nsingle;
 
-	bestPPs[i] = exp( sngBestLLKs[i] + log_single_prior - sumLLKs[i] );
+	bestPPs[i] = ( sngBestLLKs[i] + log_single_prior - sumLLKs[i] );
 	jBests[i] = kBests[i] = sBests[i];
 	bestLLKs[i] = sngBestLLKs[i];
 
@@ -605,7 +605,7 @@ int32_t cmdPlpFindMuxClust(int32_t argc, char** argv) {
 	types[i] = 2; // ambiguous
 	++namb;
 
-	bestPPs[i] = exp( sngBestLLKs[i] + log_single_prior - sumLLKs[i] );
+	bestPPs[i] = ( sngBestLLKs[i] + log_single_prior - sumLLKs[i] );
 	jBests[i] = kBests[i] = sBests[i];
 	bestLLKs[i] = sngBestLLKs[i];
 

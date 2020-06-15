@@ -47,6 +47,15 @@ extern "C" {
 #include "htslib/faidx.h"
 }
 
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
+//  int ks_resize2(kstring_t*, unsigned long);
+//#ifdef __cplusplus
+//}
+//#endif
+
+
 #include "utils.h"
 #include "genome_interval.h"
 

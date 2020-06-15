@@ -213,21 +213,23 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
 	sprintf(buf, "%s:%d", gg->seqname.c_str(), (gg->locus.beg1 + gg->locus.end0) / (uniqBin / 2));
 	std::map<std::string,gtfElement*>::iterator it2 = locusUsed.find(buf);
 	if ( it2 == locusUsed.end() ) { // if the locus was not used
-	  ++(dgeMap[*it][new_id]);
-	  ++typeCount[(*it)->type];
+	  if ( ++(dgeMap[*it][new_id]) == 1 )
+	    ++typeCount[(*it)->type];
 	  locusUsed[buf] = *it;
 	}
 	else {   // resolve ties based on gene names
 	  if ( gg->geneId < ((gtfGene*)it2->second)->geneId ) { // replace to the gene with lexicographically smaller one
-	    --(dgeMap[it2->second][new_id]);
-	    ++(dgeMap[*it][new_id]);
+	    if ( --(dgeMap[it2->second][new_id]) == 0 )
+	      --typeCount[(*it)->type];	      
+	    if ( ++(dgeMap[*it][new_id]) == 1 )
+	      ++typeCount[(*it)->type];	      
 	    locusUsed[buf] = *it;	    
 	  }
 	}
       }
       else {                        // transcript and exons are still double-counted
-	++(dgeMap[*it][new_id]);
-	++typeCount[(*it)->type];
+	if ( ++(dgeMap[*it][new_id]) == 1 )
+	  ++typeCount[(*it)->type];
       }
     }
   }
@@ -312,7 +314,8 @@ int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv) {
     int32_t igene = mapElems[e->type][e] + 1;
     htsFile* hf = mtxFiles[e->type];
     for(std::map<int32_t,int32_t>::iterator jt = it->second.begin(); jt != it->second.end(); ++jt) {
-      hprintf(hf, "%d %d %d\n", igene, jt->first + 1, jt->second);
+      if ( jt->second > 0 )
+	hprintf(hf, "%d %d %d\n", igene, jt->first + 1, jt->second);
     }
     ++nelems;
   }

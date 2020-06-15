@@ -33,7 +33,9 @@
 #include <map>
 #include <queue>
 #include <list>
+extern "C" {
 #include "htslib/sam.h"
+}
 #include "hts_utils.h"
 #include "Error.h"
 

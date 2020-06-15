@@ -3,7 +3,8 @@
 void BCFFilteredReader::init_params() {
   if ( bcf_file_name.empty() )
     error("[%s:%d %s] bcf_file_name is empty", __FILE__, __LINE__, __PRETTY_FUNCTION__);
-    
+
+  // if target interval list exists
   if ( !target_interval_list.empty() ) {
     // stat processing the target region
     genomeLocus* tmp_target_locus = NULL;
@@ -493,7 +494,7 @@ std::string& BCFFilteredReader::get_var_ID(bcf_hdr_t* hdr, bcf1_t* v) {
   varID.assign(bcf_get_chrom(cdr.hdr,v));
   varID += ":";
   char buf[256];
-  sprintf(buf,"%lld",v->pos);
+  sprintf(buf,"%d",(int32_t)v->pos);
   varID += buf;
   for(int32_t i=0; i < v->n_allele; ++i) {
     varID += (i == 0 ? ":" : "_");
@@ -676,6 +677,8 @@ int32_t BCFFilteredReader::clear_buffer_before(const char* chr, int32_t pos1) {
 }
   
 bcf1_t* BCFFilteredReader::read() {
+  if ( eof ) return NULL;
+  //notice("bcf_filtered_reader::read() called");
   n_gts = 0; n_pls = 0; n_dss = 0; n_flds = 0;
   
   if ( ( unlimited_buffer ) && ( nbuf == (int32_t)vbufs.size() ) ) {
@@ -698,7 +701,7 @@ bcf1_t* BCFFilteredReader::read() {
   }
   ++nbuf;
 
-  if ( mode_extract ) {
+  if ( mode_extract ) {   // this applies to only vcf-extract mode
     if ( variants2extract.empty() ) {
       vidx = (vidx + vbufs.size() - 1) % vbufs.size(); 
       eof = true;
@@ -752,7 +755,7 @@ bcf1_t* BCFFilteredReader::read() {
       return read();
     }
   }
-  else {
+  else {  // non vcf-extract mode
     while( cdr.read(vbufs[vidx]) ) {
       ++nRead;
       if ( nRead % verbose == 0 )
@@ -764,6 +767,7 @@ bcf1_t* BCFFilteredReader::read() {
 	++nSkip;
       }
     }
+    //vbufs[vidx] = NULL;
     vidx = (vidx + vbufs.size() - 1) % vbufs.size();
     --nbuf;    
     eof = true;
@@ -785,11 +789,11 @@ double BCFFilteredReader::calculate_af(bool useInfoField,
       int32_t* pacs = NULL;
       int32_t* pans = NULL;    
       int32_t n_acs = 0, n_ans = 0;
-      notice("WARNING: Cannot find AF field from INFO field in VCF file, now calculate AF from AC/AN");
       if ( bcf_get_info_int32(hdr, v, "AC", &pacs, &n_acs) < 0 ) // no AC
-          error("Cannot find AC field from INFO field at %s:%d",bcf_get_chrom(hdr, v), bcf_get_end_pos1(v));
+	error("Cannot find AC field from INFO field");
       if ( bcf_get_info_int32(hdr, v, "AN", &pans, &n_ans) < 0 ) // no AN
-          error("Cannot find AN field from INFO field at %s:%d",bcf_get_chrom(hdr, v), bcf_get_end_pos1(v));
+	error("Cannot find AC field from INFO field");
+
       double af = (double)pacs[0]/(double)pans[0];
       free(pacs);
       free(pans);

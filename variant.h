@@ -25,11 +25,14 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
-#include "htslib/kstring.h"
-#include "htslib/vcf.h"
 #include "allele.h"
 #include "vntr.h"
 #include "hts_utils.h"
+
+extern "C" {
+#include "htslib/kstring.h"
+#include "htslib/vcf.h"
+}
 
 #ifndef VARIANT_H
 #define VARIANT_H

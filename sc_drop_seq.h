@@ -137,6 +137,16 @@ class sc_dropseq_lib_t {
   int32_t minRead;
   int32_t minBQ;
   int32_t capBQ;
+
+  ~sc_dropseq_lib_t() {
+    std::map<int32_t,sc_snp_droplet_t*>::iterator it;
+    for(int32_t i=0; i < snp_umis.size(); ++i) {
+      for(it = snp_umis[i].begin(); it != snp_umis[i].end(); ++it) {
+	if ( it->second )
+	  delete it->second;
+      }
+    }
+  }
   
   std::set<std::string> valid_bcs;
   std::vector<int32_t>  index_bcs;

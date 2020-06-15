@@ -207,9 +207,11 @@ bam1_t* SAMFilteredReader::read() {
     ridx = (ridx + 1) % rbufs.size();    
   }
    
+
+  int res = 0;
   if ( itr ) {
     while ( true ) {
-      if ( itr && ( sam_itr_next(file,itr,rbufs[ridx]) >= 0 ) ) {
+      if ( itr && ( (res = sam_itr_next(file,itr,rbufs[ridx])) >= 0 ) ) {
 	++n_read;
 	if ( passed_filter(hdr, rbufs[ridx]) ) {
 	  ++nbuf;
@@ -220,8 +222,15 @@ bam1_t* SAMFilteredReader::read() {
 	  continue;
 	}
       }
+      else if (res < -1) {
+          fprintf(stderr, "[%s:%d %s] Error while reading %s\n", __FILE__, __LINE__, __FUNCTION__, sam_file_name.c_str());
+          exit(1);
+      }
       else if ( target_loci.next() ) { // if there are more target regions to read from
-	initialize_current_interval();
+	if (!initialize_current_interval()) {
+          fprintf(stderr, "[%s:%d %s] Error while reading %s\n", __FILE__, __LINE__, __FUNCTION__, sam_file_name.c_str());
+          exit(1);
+        }
       }
       else {
 	ridx = (ridx + rbufs.size() - 1) % rbufs.size();
@@ -230,7 +239,7 @@ bam1_t* SAMFilteredReader::read() {
     }
   }
   else {
-    while( sam_read1(file, hdr, rbufs[ridx]) >= 0 ) {
+    while( (res = sam_read1(file, hdr, rbufs[ridx])) >= 0 ) {
       ++n_read;
       if ( passed_filter(hdr, rbufs[ridx]) ) {
 	if ( target_loci.empty() ) {
@@ -254,6 +263,12 @@ bam1_t* SAMFilteredReader::read() {
       }
       ++n_skip;
     }
+    
+    if (res < -1) {
+      fprintf(stderr, "[%s:%d %s] Error while reading %s\n", __FILE__, __LINE__, __FUNCTION__, sam_file_name.c_str());
+      exit(1);
+    }
+
     ridx = (ridx + rbufs.size() - 1) % rbufs.size();    
     eof = true;
     return NULL;

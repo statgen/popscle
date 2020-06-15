@@ -39,12 +39,15 @@
 #include <vector>
 #include <map>
 #include <queue>
+
+extern "C" {
 #include "htslib/kstring.h"
 #include "htslib/khash.h"
 #include "htslib/hts.h"
 #include "htslib/sam.h"
 #include "htslib/vcf.h"
 #include "htslib/vcfutils.h"
+}
 
 /**
  * Splits a line into a vector - PERL style

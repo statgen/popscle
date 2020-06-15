@@ -23,8 +23,11 @@
 
 #include <stdint.h>
 #include <iostream>
-#include "htslib/kstring.h"
 #include <vector>
+
+extern "C" {
+#include "htslib/kstring.h"
+}
 
 #ifndef ALLELE_H
 #define ALLELE_H

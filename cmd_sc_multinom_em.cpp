@@ -95,6 +95,7 @@ int32_t cmdScMultinomEM(int32_t argc, char** argv) {
     notice("%d columns found in the header",(int32_t)hdrs.size());
     
     while( ( lstr = hts_getline(hp, KS_SEP_LINE, &str) ) >= 0 ) {
+      if ( fields != NULL ) { free(fields); fields = NULL; } // free the fields once allocated          
       fields = ksplit(&str, 0, &nfields);
       
       if ( R.empty() ) {

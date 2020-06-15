@@ -20,9 +20,9 @@
 
 #include <string>
 
-extern "C" {
-  size_t hts_realloc_or_die(unsigned long, unsigned long, unsigned long, unsigned long, int, void**, char const*);
-}
+//extern "C" {
+//  size_t hts_realloc_or_die(unsigned long, unsigned long, unsigned long, unsigned long, int, void**, char const*);
+//}
 
 
 // #ifdef __cplusplus

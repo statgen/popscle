@@ -8,7 +8,9 @@
 #include <cstdlib>
 #include "Error.h"
 
+extern "C" {
 #include "htslib/sam.h"
+}
 
 class DropCell;
 class DropTranscript;

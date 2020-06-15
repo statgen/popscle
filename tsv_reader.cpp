@@ -13,7 +13,6 @@ bool tsv_reader::open(const char* filename) {
   this->filename = filename;
   hp = hts_open(filename, "r");
   if ( hp == NULL ) {
-    error("[E:%s:%s %s] Cannot open file %s for reading", __FILE__, __LINE__, __FUNCTION__, filename);    
     return false;
   }
   return true;
@@ -28,6 +27,7 @@ bool tsv_reader::close() {
 
 int32_t tsv_reader::read_line() {
   if ( itr == NULL ) {
+    //if ( ( str.s != NULL ) && ( lstr > 0 ) ) free(str.s);
     lstr = hts_getline(hp, KS_SEP_LINE, &str);
   }
   else {
@@ -36,8 +36,12 @@ int32_t tsv_reader::read_line() {
 
   if ( lstr <= 0 ) {
     nfields = 0;
-    return lstr;
+    fields = NULL;
+    return 0; // lstr;
   }
+
+  // need to free the previously allocated fields!!
+  if ( fields != NULL ) { free(fields); fields = NULL; }  
   fields = ksplit(&str, delimiter, &nfields);
 
   //notice("lstr = %d, str = %s, delim = %d", lstr, str.s, delimiter);
@@ -72,7 +76,7 @@ bool tsv_reader::jump_to(const char* reg) {
 
 const char* tsv_reader::str_field_at(int32_t idx) {
   if ( idx >= nfields ) {
-    error("[E:%s:%s %s] Cannot access field at %d >= %d", __FILE__, __LINE__, __FUNCTION__, idx, nfields);
+    error("[E:%s:%d %s] Cannot access field at %d >= %d", __FILE__, __LINE__, __FUNCTION__, idx, nfields);
     //return NULL;
   }
   return ( &str.s[fields[idx]] );
@@ -80,13 +84,13 @@ const char* tsv_reader::str_field_at(int32_t idx) {
 
 int32_t tsv_reader::int_field_at(int32_t idx) {
   if ( idx >= nfields )
-    error("[E:%s:%s %s] Cannot access field at %d >= %d", __FILE__, __LINE__, __FUNCTION__, idx, nfields);    
+    error("[E:%s:%d %s] Cannot access field at %d >= %d", __FILE__, __LINE__, __FUNCTION__, idx, nfields);    
   return ( atoi(&str.s[fields[idx]]) );
 }
 
 double tsv_reader::double_field_at(int32_t idx) {
   if ( idx >= nfields )
-    error("[E:%s:%s %s] Cannot access field at %d >= %d", __FILE__, __LINE__, __FUNCTION__, idx, nfields);    
+    error("[E:%s:%d %s] Cannot access field at %d >= %d", __FILE__, __LINE__, __FUNCTION__, idx, nfields);    
   return ( atof(&str.s[fields[idx]]) );
 }
 
