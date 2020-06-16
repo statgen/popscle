@@ -5,9 +5,6 @@
 #include <cstring>
 #include <vector>
 
-#include "htslib/vcf.h"
-#include "htslib/hts.h"
-#include "htslib/tbx.h"
 #include "filter.h"
 #include "hts_utils.h"
 #include "cramore.h"
@@ -17,6 +14,12 @@
 #include "bcf_filter_arg.h"
 #include "bcf_variant_key.h"
 #include "Error.h"
+
+extern "C" {
+#include "htslib/vcf.h"
+#include "htslib/hts.h"
+#include "htslib/tbx.h"
+}
 
 class BCFFilteredReader {
 public:
@@ -94,11 +97,9 @@ public:
  BCFFilteredReader() : xStart(2699520), xStop(154931044), xLabel("X"), yLabel("Y"), mtLabel("MT"), isX(false), xRid(-1), yRid(-1), mtRid(-1), unit(INT_MAX), max_jumping_distance(0), verbose(10000), mode_extract(false), nRead(0), nSkip(0), nMiss(0), vidx(-1), unlimited_buffer(false), nbuf(0), eof(false), gts(NULL), n_gts(0), pls(NULL), n_pls(0), dss(NULL), n_dss(0), gps(NULL), n_gps(0), flds(NULL), n_flds(0), ploidies(NULL), an(0) {}
 
   ~BCFFilteredReader() {
-    /*
     for(int32_t i=0; i < (int32_t)vbufs.size(); ++i) {
       bcf_destroy(vbufs[i]);
     }
-    */
     if ( pls ) free(pls);
     if ( gts ) free(gts);
     if ( gps ) free(gps);
@@ -112,9 +113,8 @@ public:
 
   // buffer management 
   void set_buffer_size(int32_t buffer_size);
-  inline bcf1_t* cursor() { return eof ? NULL : vbufs[vidx]; }
+  inline bcf1_t* cursor() { return vbufs[vidx]; }
   inline bcf1_t* cursor(int32_t idx) {
-    if ( eof && ( idx == 0 ) ) return NULL;
     if ( idx < nbuf ) {
       return vbufs[(vidx + vbufs.size() - idx) % vbufs.size()];
     }

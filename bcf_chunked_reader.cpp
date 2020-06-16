@@ -56,7 +56,6 @@ void BCFChunkedReader::init(genomeLoci* pIntervals) {
   if ( pIntervals ) {
     this->target_intervals = *pIntervals;
     this->target_intervals.resolveOverlaps();
-    //notice("foo %s", pIntervals->loci.begin()->toString());
   }
   
   //index_loaded = false;
