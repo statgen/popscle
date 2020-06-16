@@ -28,6 +28,9 @@ int32_t cmdCramDemuxlet(int32_t argc, char** argv);
 int32_t cmdCramFreemuxlet(int32_t argc, char** argv);
 int32_t cmdCramFreemux2(int32_t argc, char** argv);
 int32_t cmdCramDigitalPileup(int32_t argc, char** argv);
+int32_t cmdCramDscPileup(int32_t argc, char** argv);
+int32_t cmdCramDscDump(int32_t argc, char** argv);
+int32_t cmdCramDscDump2Pileup(int32_t argc, char** argv);
 int32_t cmdPlpMakeDGEMatrix(int32_t argc, char** argv);
 
 
@@ -40,7 +43,10 @@ int32_t main(int32_t argc, char** argv) {
     LONG_COMMAND("demuxlet", &cmdCramDemuxlet, "Deconvolute sample identify of droplet-based sc-RNAseq")
     LONG_COMMAND("freemuxlet-old", &cmdCramFreemuxlet, "Genotype-free deconvolution of sc-RNAseq (deprecated)")
     LONG_COMMAND("freemuxlet", &cmdCramFreemux2, "Genotype-free deconvolution of sc-RNAseq")    
-    LONG_COMMAND("dsc-pileup", &cmdCramDigitalPileup, "Produce pileup of dsc-RNAseq")    
+    LONG_COMMAND("digital-pileup", &cmdCramDigitalPileup, "Produce pileup of dsc-RNAseq (old version of dsc-pileup)")
+    LONG_COMMAND("dsc-pileup", &cmdCramDscPileup, "Produce pileup of dsc-RNAseq")
+    LONG_COMMAND("dsc-dump", &cmdCramDscDump, "Produce a file dump of dsc-RNAseq")
+    LONG_COMMAND("dsc-dump2plp", &cmdCramDscDump2Pileup, "Produce a pileup from a dump of dsc-RNAseq")     
     LONG_COMMAND("plp-make-dge-matrix", &cmdPlpMakeDGEMatrix, "Make Digital Expression Matrix from Digital Pileups")
   END_LONG_COMMANDS();
 

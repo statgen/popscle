@@ -36,6 +36,9 @@ add_executable(popscle
         bgzf.h
         cmd_cram_demuxlet.cpp
         cmd_cram_digital_pileup.cpp
+        cmd_cram_dsc_pileup.cpp
+        cmd_cram_dsc_dump.cpp
+        cmd_cram_dsc_dump2pileup.cpp	
         cmd_cram_freemuxlet.cpp
         cmd_cram_freemux2.cpp
         cmd_plp_make_dge_matrix.cpp
