@@ -43,6 +43,14 @@ typedef khash_t(vdict) vdict_t;
 //}
 //#endif
 
+//struct faidx_t {
+//    BGZF *bgzf;
+//    int n, m;
+//    char **name;
+//    khash_t(s) *hash;
+//    enum fai_format_options format;
+//};
+
 
 /**********
  *FAI UTILS
@@ -53,37 +61,43 @@ typedef khash_t(vdict) vdict_t;
  */
 char *faidx_fetch_uc_seq(const faidx_t *fai, const char *c_name, int p_beg_i, int p_end_i, int *len)
 {
-    int l;
-    char c;
-    khiter_t iter;
-    faidx1_t val;
-    char *seq=NULL;
+  char* seq = faidx_fetch_seq(fai, c_name, p_beg_i, p_end_i, len);
+  if ( *len > 0 ) {
+    for(int i=0; i < *len; ++i)
+      if ( isgraph(seq[i]) ) seq[i] = toupper(seq[i]);
+  }
+  return seq;
+    // int l;
+    // char c;
+    // khiter_t iter;
+    // faidx1_t val;
+    // char *seq=NULL;
 
-    // Adjust position
-    iter = kh_get(s, fai->hash, c_name);
-    if(iter == kh_end(fai->hash)) return 0;
-    val = kh_value(fai->hash, iter);
-    if(p_end_i < p_beg_i) p_beg_i = p_end_i;
-    if(p_beg_i < 0) p_beg_i = 0;
-    else if(val.len <= p_beg_i) p_beg_i = val.len - 1;
-    if(p_end_i < 0) p_end_i = 0;
-    else if(val.len <= p_end_i) p_end_i = val.len - 1;
+    // // Adjust position
+    // iter = kh_get(s, fai->hash, c_name);
+    // if(iter == kh_end(fai->hash)) return 0;
+    // val = kh_value(fai->hash, iter);
+    // if(p_end_i < p_beg_i) p_beg_i = p_end_i;
+    // if(p_beg_i < 0) p_beg_i = 0;
+    // else if(val.len <= p_beg_i) p_beg_i = val.len - 1;
+    // if(p_end_i < 0) p_end_i = 0;
+    // else if(val.len <= p_end_i) p_end_i = val.len - 1;
 
-    // Now retrieve the sequence
-    int ret = bgzf_useek(fai->bgzf, val.offset + p_beg_i / val.line_blen * val.line_len + p_beg_i % val.line_blen, SEEK_SET);
-    if ( ret<0 )
-    {
-        *len = -1;
-        fprintf(stderr,"[fai_fetch_seq] Error: fai_fetch failed. (Seeking in a compressed, .gzi unindexed, file?)\n");
-        return NULL;
-    }
-    l = 0;
-    seq = (char*)malloc(p_end_i - p_beg_i + 2);
-    while ( (c=bgzf_getc(fai->bgzf))>=0 && l < p_end_i - p_beg_i + 1)
-        if (isgraph(c)) seq[l++] = toupper(c);
-    seq[l] = '\0';
-    *len = l;
-    return seq;
+    // // Now retrieve the sequence
+    // int ret = bgzf_useek(fai->bgzf, val.offset + p_beg_i / val.line_blen * val.line_len + p_beg_i % val.line_blen, SEEK_SET);
+    // if ( ret<0 )
+    // {
+    //     *len = -1;
+    //     fprintf(stderr,"[fai_fetch_seq] Error: fai_fetch failed. (Seeking in a compressed, .gzi unindexed, file?)\n");
+    //     return NULL;
+    // }
+    // l = 0;
+    // seq = (char*)malloc(p_end_i - p_beg_i + 2);
+    // while ( (c=bgzf_getc(fai->bgzf))>=0 && l < p_end_i - p_beg_i + 1)
+    //     if (isgraph(c)) seq[l++] = toupper(c);
+    // seq[l] = '\0';
+    // *len = l;
+    // return seq;
 }
 
 /**********
@@ -1063,7 +1077,8 @@ std::string bam_hdr_get_sample_name(bam_hdr_t* hdr) {
   if ( !hdr )
     error("[E:%s:%d %s] [E:%s:%d %s] Failed to read the BAM header",__FILE__,__LINE__,__FUNCTION__,__FILE__, __LINE__, __FUNCTION__);
 
-  const char *p = hdr->text;
+  char *ptext = strdup(hdr->text);  
+  const char *p = ptext; 
   const char *q, *r;
   int32_t n = 0;
   std::string sm;
@@ -1091,6 +1106,7 @@ std::string bam_hdr_get_sample_name(bam_hdr_t* hdr) {
   if ( sm.empty() ) {
     warning("[W:%s:%d %s] Sample ID information cannot be found",__FILE__,__LINE__,__FUNCTION__);
   }
+  free(ptext);
   return sm;
 }
 
@@ -1192,6 +1208,7 @@ char *samfaipath(const char *fn_ref)
     return fn_list;
 };
 
+/*
 // Minimal sanitisation of a header to ensure.
 // - null terminated string.
 // - all lines start with @ (also implies no blank lines).
@@ -1264,6 +1281,7 @@ bam_hdr_t *sam_hdr_sanitise(bam_hdr_t *h) {
 
     return h;
 }
+*/
 
 /*
 bam_hdr_t* bam_hdr_merge(std::vector<bam_hdr_t*> hdrs) {

@@ -45,6 +45,7 @@ extern "C" {
 #include "htslib/vcf.h"
 #include "htslib/bgzf.h"
 #include "htslib/faidx.h"
+#include "htslib/vcfutils.h"
 }
 
 //#ifdef __cplusplus
@@ -524,7 +525,7 @@ bool same_hrecs(bcf_hdr_t* dst_hdr, bcf_hrec_t* dst, bcf_hdr_t* src_hdr, bcf_hre
 
 char *samfaipath(const char *fn_ref);
 
-bam_hdr_t *sam_hdr_sanitise(bam_hdr_t *h);
+//bam_hdr_t *sam_hdr_sanitise(bam_hdr_t *h);
 
 //bam_hdr_t* bam_hdr_merge(std::vector<bam_hdr_t*>& hdrs);
 
