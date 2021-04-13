@@ -25,7 +25,7 @@
 
  RUN git clone https://github.com/samtools/htslib.git
  RUN cd htslib && \
-	 git submodule update --init --recursive && \
+     git submodule update --init --recursive && \
      autoheader && \
      autoconf && \
      ./configure --prefix=/usr/local/ && \
