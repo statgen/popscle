@@ -200,8 +200,8 @@ public:
   }
 };
 
-template<typename T>
 struct gtfComp {
+  template<typename T>  
   bool operator()(const T* lhs, const T* rhs) const {  
     if ( lhs->locus == rhs->locus ) {
       return ((int64_t)rhs - (int64_t)lhs > 0);
